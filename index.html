@@ -350,7 +350,7 @@ h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.1
 <main id="app"></main>
 <div class="toast" id="toast" hidden></div>
 
-<script>window.SADA_EMBED=true;</script>
+<script>window.SADA_EMBED=true;window.SADA_AUDIO=true;</script>
 <script>
 // Sadâ — episode file. Each new podcast = one object like this, pushed to window.SADA_EPISODES.
 window.SADA_EPISODES = window.SADA_EPISODES || [];
@@ -3929,17 +3929,35 @@ function pickVoice(){
   if(!('speechSynthesis' in window)) return;
   const vs = speechSynthesis.getVoices();
   arVoice = vs.find(v=>/^ar(-|_|$)/i.test(v.lang)) || null;
-  $('#voiceInfo').hidden = !!arVoice || vs.length===0;
+  $('#voiceInfo').hidden = !!window.SADA_AUDIO || !!arVoice || vs.length===0;
 }
 if('speechSynthesis' in window){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
 document.getElementById('voiceInfo').onclick=()=>{ const d=document.getElementById('voiceHelp'); if(d.showModal) d.showModal(); else d.setAttribute('open',''); };
 let warnedVoice=false;
+const akey = t => { t=String(t).trim().replace(/\s+/g,' '); let h=0x811c9dc5; for(const ch of t){ h^=ch.codePointAt(0); h=Math.imul(h,0x01000193)>>>0; } return h.toString(16).padStart(8,'0')+'_'+t.length.toString(36); };
+let curAudio=null, seqId=0;
 function speak(text, rate=0.85){
+  const parts=String(text).split('‖').map(s=>s.trim()).filter(Boolean);
+  const my=++seqId; if(curAudio){ try{curAudio.pause();}catch(e){} curAudio=null; }
+  if('speechSynthesis' in window) speechSynthesis.cancel();
+  const go=i=>{ if(i<parts.length && my===seqId) playOne(parts[i], rate, ()=>go(i+1), my); };
+  go(0);
+}
+function playOne(t, rate, next, my){
+  if(!window.SADA_AUDIO){ ttsOne(t, rate, next); return; }
+  let fell=false; const fallback=()=>{ if(fell||my!==seqId) return; fell=true; ttsOne(t, rate, next); };
+  const a=new Audio('audio/'+akey(t)+'.mp3'); curAudio=a;
+  a.playbackRate=Math.max(0.5, Math.min(1.25, rate/0.85)); a.preservesPitch=true;
+  a.onended=()=>{ if(my===seqId) next(); }; a.onerror=fallback;
+  const p=a.play(); if(p&&p.catch) p.catch(fallback);
+}
+function ttsOne(text, rate, next){
   if(!('speechSynthesis' in window)){ toast('Bu tarayıcı sesli okumayı desteklemiyor.'); return; }
-  speechSynthesis.cancel();
+  if(!arVoice){ const vi=document.getElementById('voiceInfo'); if(vi && speechSynthesis.getVoices().length) vi.hidden=false; }
   if(!arVoice && speechSynthesis.getVoices().length && !warnedVoice){ warnedVoice=true; toast('Bu cihazda Arapça ses bulunamadı. Sağ üstteki "Arapça ses yok" düğmesine dokun.'); }
   const u = new SpeechSynthesisUtterance(text);
   u.lang = arVoice ? arVoice.lang : 'ar-SA'; if(arVoice) u.voice = arVoice; u.rate = rate;
+  if(next) u.onend = next;
   speechSynthesis.speak(u);
 }
 const ICON_SPK = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
@@ -4405,7 +4423,7 @@ VIEWS.read = (el, ep) => {
   const R = ep.reading, P = prefs(); const open = new Set();
   const draw = () => {
     el.innerHTML = `
-      <div class="toolbar"><button class="toggle" id="tH" aria-pressed="${P.harakat}">Harekeler</button>${spkBtn(R.paras.map(p=>p.ar).join(' '),'Metnin tamamını dinle')}<span class="muted" style="font-size:.88rem">Metnin tamamını dinle</span></div>
+      <div class="toolbar"><button class="toggle" id="tH" aria-pressed="${P.harakat}">Harekeler</button>${spkBtn(R.paras.map(p=>p.ar).join(' ‖ '),'Metnin tamamını dinle')}<span class="muted" style="font-size:.88rem">Metnin tamamını dinle</span></div>
       <article class="reader">
         <h3>${esc(R.titleAr)}</h3>
         ${R.paras.map((p,i)=>`<div class="para">
@@ -4523,7 +4541,7 @@ VIEWS.mine = (el, ep) => {
       <div class="mine">
         <div class="eyebrow">${esc((ep.ui&&ep.ui.mine&&ep.ui.mine.label)||'Benim sabahım · صَبَاحِي')}</div>
         ${sentences.length?`<div class="ar">${sentences.map(esc).join(' ')}</div>
-          <div class="toolbar">${spkBtn(sentences.join(' '),'Paragrafımı dinle')}<span style="font-size:.9rem">Dinle, sonra yüksek sesle oku.</span>
+          <div class="toolbar">${spkBtn(sentences.join(' ‖ '),'Paragrafımı dinle')}<span style="font-size:.9rem">Dinle, sonra yüksek sesle oku.</span>
           <button class="btn sm primary" id="said" ${st.said>=3?'disabled':''}>${st.said>=3?'Üç kez okudun ✓':'Sesli okudum ('+st.said+'/3)'}</button></div>`
           :'<div class="muted">Yukarıdan seçim yaptıkça paragrafın burada oluşacak.</div>'}
       </div>
