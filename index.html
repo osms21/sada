@@ -1,0 +1,1003 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Sadâ: YouTube podcastleriyle Arapça dinleme ve kelime çalışması (Türkçe arayüz).">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232441A6'/%3E%3Ctext x='32' y='44' font-size='34' text-anchor='middle' fill='white' font-family='serif'%3E%D8%B5%3C/text%3E%3C/svg%3E">
+<title>Sadâ</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Reem+Kufi:wght@500;700&display=swap">
+<style>
+/* Layout: a listening library → one episode as a ten-step path; sticky step bar, single reading column. */
+:root{
+  --bg:#F4F6F9; --surface:#FFFFFF; --ink:#141C33; --muted:#5B6479; --line:#DCE1EA;
+  --accent:#2441A6; --accent-ink:#FFFFFF; --accent-soft:#E7ECFA;
+  --ok:#0E8A7E; --ok-soft:#DDF3F0; --bad:#C9452C; --bad-soft:#FBE6E1; --gold:#C98A12; --gold-soft:#FBF0D8;
+  --f-display:"Bricolage Grotesque", "Figtree", system-ui, sans-serif;
+  --f-body:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-ar:"Noto Naskh Arabic", "Amiri", "Geeza Pro", "Traditional Arabic", serif;
+  --f-kufi:"Reem Kufi", "Noto Naskh Arabic", serif;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0D1220; --surface:#151C2E; --ink:#E7EBF4; --muted:#98A1B6; --line:#262F47;
+  --accent:#8099F3; --accent-ink:#0D1220; --accent-soft:#1D2646;
+  --ok:#3CC3B3; --ok-soft:#0F2E2C; --bad:#F07A62; --bad-soft:#3A1C17; --gold:#EDBE55; --gold-soft:#33290F; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0D1220; --surface:#151C2E; --ink:#E7EBF4; --muted:#98A1B6; --line:#262F47;
+  --accent:#8099F3; --accent-ink:#0D1220; --accent-soft:#1D2646;
+  --ok:#3CC3B3; --ok-soft:#0F2E2C; --bad:#F07A62; --bad-soft:#3A1C17; --gold:#EDBE55; --gold-soft:#33290F; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55;margin:0}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.wrap{max-width:900px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+button{font:inherit;color:inherit;cursor:pointer}
+a{color:var(--accent)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:8px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.15}
+.ar{font-family:var(--f-ar);direction:rtl;unicode-bidi:isolate;line-height:2;font-size:calc(1.3rem * var(--ars,1))}
+.muted{color:var(--muted)}
+.eyebrow{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:12px;padding-block:10px}
+.brand{display:flex;align-items:baseline;gap:8px;background:none;border:0;padding:0}
+.brand .kufi{font-family:var(--f-kufi);font-size:1.6rem;color:var(--accent);line-height:1}
+.brand .lat{font-family:var(--f-display);font-weight:700;font-size:1.25rem}
+.top .spacer{flex:1}
+.fs{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;background:var(--surface);overflow:hidden}
+.fs button{border:0;background:transparent;padding:4px 10px;font-weight:700;min-width:34px;min-height:32px}
+.fs button:hover:not([disabled]){color:var(--accent)}
+.fs button[disabled]{opacity:.35;cursor:default}
+.fs .lbl{font-family:var(--f-ar);font-size:1.05rem;padding:0 4px;color:var(--muted);line-height:1}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:.8rem;font-weight:600;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+.pill.gold{background:var(--gold-soft);color:var(--gold)}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.plain{background:transparent;border:1px solid var(--line);color:var(--muted)}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 14px;font-weight:600;font-size:.92rem;text-decoration:none;color:var(--ink)}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn.sm{padding:5px 10px;font-size:.82rem;border-radius:8px}
+.btn[disabled]{opacity:.45;cursor:default}
+.icon{width:18px;height:18px;flex:none}
+.speak{width:36px;height:36px;padding:0;border-radius:50%;flex:none}
+
+/* home */
+.hero{padding-block:40px 24px;display:grid;gap:14px}
+.hero h1{font-size:clamp(2rem,5vw,3rem);font-weight:700;max-width:16ch}
+.hero p{max-width:58ch;margin:0;color:var(--muted);font-size:1.05rem}
+.wave{display:flex;align-items:center;gap:4px;height:40px}
+.wave i{display:block;width:5px;border-radius:3px;background:var(--accent);opacity:.85}
+@media (prefers-reduced-motion:no-preference){.wave i{animation:pulse 1.6s ease-in-out infinite}}
+@keyframes pulse{50%{transform:scaleY(.45)}}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-block:8px 18px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 14px;font-weight:600;font-size:.88rem}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;padding-bottom:48px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;display:grid;gap:12px;text-align:left}
+.ep-card{cursor:pointer}
+.ep-card:hover{border-color:var(--accent)}
+.ep-card .ar{font-family:var(--f-ar);font-weight:700;font-size:calc(1.6rem * var(--ars,1));line-height:1.8;color:var(--accent)}
+.meta{display:flex;gap:6px;flex-wrap:wrap}
+.bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.bar>span{display:block;height:100%;background:var(--ok);border-radius:3px;transition:width .3s}
+.searchrow{margin-block:10px 4px}
+#search{width:100%;max-width:520px;font:inherit;font-size:1rem;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink)}
+#search:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{border:0;background:var(--bg);color:var(--muted);border-radius:6px;padding:2px 8px;font-size:.78rem;font-weight:600}
+.tag:hover{color:var(--accent)}
+.ep-card .cover{width:calc(100% + 40px);max-width:none;margin:-20px -20px 0;aspect-ratio:16/9;object-fit:cover;border-radius:var(--r) var(--r) 0 0;display:block}
+.ep-card{overflow:hidden}
+.ep-card .cover{object-position:85% 50%;aspect-ratio:3/2}
+.hero-cover{position:relative;border-radius:var(--r);overflow:hidden;border:1px solid var(--line)}
+.hero-cover img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover}
+.hero-cover .ov{position:absolute;inset:0 auto 0 0;width:42%;display:grid;align-content:center;gap:4px;padding:0 2% 0 4%}
+.hero-cover .ov .ar-title{color:#2441A6;text-align:right;font-size:clamp(1.6rem,3.6vw,2.4rem)}
+.hero-cover .ov h1{color:#141C33;font-size:clamp(1.3rem,2.6vw,1.9rem)}
+@media (max-width:700px){
+  .hero-cover{border:0;overflow:visible}
+  .hero-cover img{aspect-ratio:4/3;object-position:85% 50%;border-radius:var(--r)}
+  .hero-cover .ov{position:static;width:auto;padding:12px 0 0}
+  .hero-cover .ov .ar-title{color:var(--accent);text-align:start}
+  .hero-cover .ov h1{color:var(--ink);font-size:1.6rem}
+}
+.prog{display:grid;gap:5px}
+.prow{display:grid;grid-template-columns:62px 1fr 38px;align-items:center;gap:8px;font-size:.8rem;font-weight:600}
+.prow b{text-align:end;font-variant-numeric:tabular-nums;color:var(--ok)}
+.pathtag{display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:.9rem;padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line)}
+.actions{align-items:center}
+.paths{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.pathcard{display:grid;gap:12px;text-align:start;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;align-content:start}
+.pathcard:hover{border-color:var(--accent)}
+.pathcard.cur{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.pc-h{display:flex;gap:12px;align-items:center}
+.pc-h b{font-family:var(--f-display);font-size:1.25rem}
+.pc-i{font-size:1.8rem;line-height:1}
+.pathcard ul{margin:0;padding-inline-start:20px;display:grid;gap:4px;font-size:.93rem}
+.pc-f{font-size:.85rem;font-weight:600;color:var(--accent)}
+.finish{display:grid;gap:12px;justify-items:center;text-align:center;padding-block:32px;max-width:560px;margin:0 auto}
+.finish p{margin:0}
+.fin-i{font-size:3rem;line-height:1}
+.soon{border-style:dashed;background:transparent;color:var(--muted);align-content:center;min-height:200px}
+
+/* episode */
+.ep-head{padding-block:28px 18px;display:grid;gap:12px}
+.ep-head .ar-title{font-family:var(--f-ar);font-weight:700;font-size:clamp(1.9rem,5.5vw,2.6rem);color:var(--accent);direction:rtl;line-height:1.8}
+.ep-head .actions{display:flex;gap:8px;flex-wrap:wrap}
+.steps{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--toph,53px) - 1px);z-index:15;background:var(--bg);border-bottom:1px solid var(--line)}
+.steps .wrap{display:flex;gap:6px;overflow-x:auto;padding-block:10px;scrollbar-width:thin}
+.phase{flex:none;display:grid;gap:4px;padding:4px 8px 6px;border-radius:12px}
+.phase+.phase{border-inline-start:1px solid var(--line);border-radius:0 12px 12px 0}
+.phase.on{background:var(--accent-soft)}
+.ph-l{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);display:flex;gap:6px;align-items:center;white-space:nowrap}
+.phase.on .ph-l{color:var(--accent)}
+.ph-l b{font-family:var(--f-display)}
+.ph-c{font-variant-numeric:tabular-nums;font-weight:600;letter-spacing:0;opacity:.8}
+.ph-s{display:flex;gap:6px}
+.pattern{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);overflow:hidden}
+.pattern.open{border-color:var(--gold)}
+.pat-h{width:100%;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border:0;background:transparent;padding:12px 16px;text-align:start}
+.pat-ar{font-size:calc(1.5rem * var(--ars,1));font-weight:700;line-height:1.5}
+.pat-tr{font-weight:600;flex:1;min-width:0}
+.chev{font-size:1.3rem;font-weight:700;color:var(--muted)}
+.pat-b{padding:0 16px 16px;display:grid;gap:12px}
+.pat-b ul{margin:0;padding-inline-start:20px;display:grid;gap:6px;font-size:.95rem}
+.pat-ex{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:8px}
+.ari{font-family:var(--f-ar);font-size:calc(1.2em * var(--ars,1));line-height:1.6}
+.pat-i{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:10px;padding:4px 6px 4px 10px;background:var(--bg)}
+.pat-i .ar{font-size:calc(1.25rem * var(--ars,1));line-height:1.6}
+.pat-i .muted{flex:1;font-size:.85rem}
+.step{flex:none;display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px 5px 5px;font-size:.86rem;font-weight:600}
+.step .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);font-size:.75rem;font-variant-numeric:tabular-nums}
+.step.done .n{background:var(--ok);color:var(--surface)}
+.step[aria-current="step"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.panel{padding-block:24px 64px;display:grid;gap:18px}
+.panel-head{display:grid;gap:6px}
+.panel-head h2{font-size:1.6rem}
+.panel-head p{margin:0;color:var(--muted);max-width:62ch}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.toggle{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:.86rem;font-weight:600}
+.toggle[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:3px;gap:2px;flex-wrap:wrap}
+.seg button{border:0;background:transparent;border-radius:9px;padding:5px 12px;display:grid;line-height:1.2;text-align:center}
+.seg button span{font-weight:600;font-size:.88rem}
+.seg button small{font-size:.7rem;color:var(--muted)}
+.seg button[aria-checked="true"]{background:var(--accent);color:var(--accent-ink)}
+.seg button[aria-checked="true"] small{color:var(--accent-ink);opacity:.8}
+.veil{display:flex;flex-wrap:wrap;gap:6px;direction:rtl;padding-block:10px 6px}
+.veil i{display:block;height:10px;width:46px;border-radius:5px;background:var(--line)}
+.veil i:nth-child(3n){width:30px}.veil i:nth-child(4n){width:62px}
+.note{background:var(--gold-soft);color:var(--ink);border-radius:var(--r);padding:12px 16px;font-size:.92rem}
+.foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:18px}
+
+/* vocab */
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.flip{position:relative;min-height:190px;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:16px;display:grid;align-content:space-between;gap:8px;text-align:center;cursor:pointer}
+.flip:hover{border-color:var(--accent)}
+.vic{width:56px;height:56px;color:var(--accent);margin:4px auto 0;display:block}
+.vic.sm{width:28px;height:28px;margin:0 auto;opacity:.8}
+.tile .vic{width:40px;height:40px;margin:0 auto}
+[hidden]{display:none!important}
+.flip .big{font-family:var(--f-ar);font-size:calc(2rem * var(--ars,1));direction:rtl;line-height:1.6}
+.flip .trfront{font-family:var(--f-display);font-size:1.35rem;font-weight:700;line-height:1.3;padding-block:8px}
+.flip .front{display:grid;justify-items:center;gap:6px}
+.playbig{width:72px;height:72px;border-radius:50%;padding:0;margin:14px auto 0}
+.playbig .icon{width:30px;height:30px}
+.flip .tl{font-size:.85rem;color:var(--muted);font-style:italic}
+.flip .back{display:grid;gap:6px}
+.flip .tr{font-family:var(--f-display);font-size:1.25rem;font-weight:700}
+.flip .root{font-family:var(--f-ar);direction:rtl;color:var(--muted);font-size:calc(1rem * var(--ars,1))}
+.flip .ex{font-size:1.05rem}
+.flip.seen{border-color:var(--ok)}
+.flip .row{display:flex;justify-content:center;gap:6px;flex-wrap:wrap}
+
+/* transcript */
+.lines{display:grid;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.line{display:grid;grid-template-columns:62px 1fr auto;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line);align-items:start}
+.line:last-child{border-bottom:0}
+.line.sum{background:var(--accent-soft)}
+.ts{font-variant-numeric:tabular-nums;font-size:.8rem;font-weight:700;text-decoration:none;color:var(--accent);padding-top:10px}
+.ts:hover{text-decoration:underline}
+.line .body{min-width:0;display:grid;gap:2px}
+.who{font-size:.75rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.who.Y{color:var(--accent)} .who.L{color:var(--ok)}
+.line .tr{color:var(--muted);font-size:.93rem}
+.line .ar{font-size:calc(1.25rem * var(--ars,1))}
+
+/* quiz */
+.q{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:10px}
+.q .qt{font-weight:600}
+.qrow{display:flex;align-items:flex-start;gap:10px;direction:rtl}
+.qrow .qt{flex:1;min-width:0;font-size:calc(1.35rem * var(--ars,1));font-weight:600;line-height:1.9}
+.qn{flex:none;width:28px;height:28px;margin-top:8px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:.8rem;font-weight:700;font-variant-numeric:tabular-nums}
+.opts{display:flex;gap:8px;flex-wrap:wrap}
+.opt{border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:8px 14px;font-weight:500}
+.opt:hover:not([disabled]){border-color:var(--accent)}
+.opt.right{background:var(--ok-soft);border-color:var(--ok);color:var(--ok);font-weight:700}
+.opt.wrong{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+.opt.ar-opt{font-family:var(--f-ar);font-size:calc(1.2rem * var(--ars,1));direction:rtl;line-height:1.6;padding:4px 14px}
+.fb{font-size:.88rem;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.fb.ok{color:var(--ok)} .fb.no{color:var(--bad)}
+.score{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.score b{font-family:var(--f-display);font-size:2rem;font-variant-numeric:tabular-nums}
+
+/* match */
+.match{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mcol{display:grid;gap:8px;align-content:start}
+.tile{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 12px;min-height:56px;font-weight:600}
+.tile.arw{font-family:var(--f-ar);font-size:calc(1.35rem * var(--ars,1));direction:rtl;font-weight:500;line-height:1.5}
+.tile.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.tile.gone{background:var(--ok-soft);border-color:var(--ok);color:var(--ok);opacity:.7}
+.tile.shake{border-color:var(--bad);background:var(--bad-soft)}
+@media (prefers-reduced-motion:no-preference){.tile.shake{animation:shake .35s}}
+@keyframes shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+
+/* gaps */
+.gap-s{font-family:var(--f-ar);direction:rtl;font-size:calc(1.4rem * var(--ars,1));line-height:2}
+.blank{display:inline-block;min-width:90px;border-bottom:2px dashed var(--accent);text-align:center;color:var(--accent);padding-inline:6px}
+.blank.filled{border-bottom-style:solid;color:var(--ok);border-color:var(--ok)}
+
+/* order */
+.olist{display:grid;gap:8px;counter-reset:o}
+.oitem{display:flex;align-items:center;gap:12px;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 12px;text-align:right;justify-content:space-between}
+.oitem .ar{font-size:calc(1.2rem * var(--ars,1))}
+.oitem .k{width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-size:.8rem;font-weight:700;flex:none}
+.oitem{transition:transform .15s ease}
+.oitem.dragging{transition:none;z-index:5;position:relative;box-shadow:0 8px 24px rgba(0,0,0,.18);border-color:var(--accent)}
+.grip{display:grid;place-items:center;width:28px;height:36px;color:var(--muted);cursor:grab;touch-action:none;flex:none;border-radius:6px}
+.grip:hover{color:var(--accent);background:var(--accent-soft)}
+.oitem.dragging .grip{cursor:grabbing}
+.arrows{display:flex;gap:2px;flex:none}
+.otext{flex:1;min-width:0;display:grid;gap:0;text-align:right}
+.otr{font-size:.82rem;direction:ltr;text-align:right}
+.oitem{gap:8px}
+.arrows .btn{padding:4px 8px}
+@media (prefers-reduced-motion:reduce){.oitem{transition:none}}
+.oitem.right{border-color:var(--ok);background:var(--ok-soft)}
+.oitem.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.pool{display:flex;flex-wrap:wrap;gap:8px;direction:rtl}
+.pool .tile{font-family:var(--f-ar);font-size:calc(1.15rem * var(--ars,1));font-weight:500;line-height:1.6}
+
+/* reading */
+.reader{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:22px;display:grid;gap:16px}
+.reader h3{font-family:var(--f-ar);font-size:1.7rem;color:var(--accent);direction:rtl;text-align:right;font-weight:700;line-height:1.8}
+.para{display:grid;gap:6px}
+.para .ar{font-size:calc(1.35rem * var(--ars,1));line-height:2.1}
+.para .row{display:flex;gap:8px;align-items:center}
+.para .tr{color:var(--muted);font-size:.95rem;border-inline-start:3px solid var(--line);padding-inline-start:10px}
+
+/* shadowing */
+.shadow{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:10px}
+.shadow .ar{font-size:calc(1.45rem * var(--ars,1))}
+.shadow .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.dots{display:flex;gap:5px;margin-inline-start:auto}
+.dots i{width:12px;height:12px;border-radius:50%;border:2px solid var(--ok)}
+.dots i.on{background:var(--ok)}
+
+/* dictation */
+.dict{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;display:grid;gap:14px;justify-items:center;text-align:center}
+.dict .out{font-family:var(--f-ar);direction:rtl;font-size:calc(2rem * var(--ars,1));min-height:64px;width:100%;max-width:420px;border:2px solid var(--line);border-radius:12px;padding:4px 12px;background:var(--bg);line-height:1.8}
+.kb{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:5px;direction:rtl;width:100%;max-width:520px}
+.kb button{font-family:var(--f-ar);font-size:calc(1.25rem * var(--ars,1));border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:4px 0;min-height:42px}
+.kb button:hover{border-color:var(--accent)}
+.dict input.out{text-align:center;color:var(--ink);font-family:var(--f-ar)}
+.dict input.out:focus{outline:none;border-color:var(--accent)}
+.kb.marks{grid-template-columns:repeat(6,minmax(0,1fr))}
+.kb.marks button{display:grid;place-items:center;gap:0;padding:2px 0}
+.kb.marks .mk{font-size:calc(1.5rem * var(--ars,1));line-height:1.3}
+.kb.marks small{font-family:var(--f-body);font-size:.68rem;color:var(--muted)}
+.kb .wide{grid-column:span 2;font-family:var(--f-body);font-size:.85rem;font-weight:600}
+
+/* my morning */
+.frames{display:grid;gap:12px}
+.frame{display:grid;gap:8px}
+.frame label{font-weight:600;font-size:.92rem}
+.mine{background:var(--accent-soft);border-radius:var(--r);padding:20px;display:grid;gap:10px}
+.mine .ar{font-size:calc(1.45rem * var(--ars,1));line-height:2.1}
+.check{display:flex;align-items:center;gap:8px;font-size:.92rem}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:600;font-size:.9rem;z-index:50;max-width:calc(100% - 32px);text-align:center}
+@media (max-width:560px){
+  .line{grid-template-columns:1fr auto;gap:6px}
+  .line .ts{grid-column:1/-1;padding-top:0}
+  .match{gap:6px}
+  .tile.arw{font-size:calc(1.2rem * var(--ars,1))}
+  .kb{grid-template-columns:repeat(7,minmax(0,1fr))}
+}
+.ytbox{position:sticky;z-index:12;background:var(--bg);padding:8px 0 10px;margin:-4px 0 6px}
+.ytbox .frame{width:min(100%, calc(34vh * 16 / 9));aspect-ratio:16/9;margin:0 auto;border-radius:12px;overflow:hidden;background:#000}
+.ytbox .frame iframe,.ytbox #ytp{width:100%;height:100%;display:block;border:0}
+.ytbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);width:min(100%, calc(34vh * 16 / 9));margin:6px auto 0}
+.ytbar a{color:var(--muted)}
+.ytbar label{display:inline-flex;gap:6px;align-items:center;cursor:pointer}
+.line.now{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+</style>
+</head>
+<body>
+
+
+<header class="top"><div class="wrap">
+  <button class="brand" id="homeBtn" aria-label="Sadâ ana sayfa"><span class="kufi">صدى</span><span class="lat">Sadâ</span></button>
+  <span class="spacer"></span>
+  <span class="pill plain" id="voiceInfo" hidden>Arapça ses yok</span>
+  <div class="fs" role="group" aria-label="Arapça yazı boyutu" title="Arapça yazı boyutu">
+    <button id="fsDown" aria-label="Arapça yazıyı küçült">A−</button><span class="lbl" aria-hidden="true">أ</span><button id="fsUp" aria-label="Arapça yazıyı büyüt">A+</button>
+  </div>
+</div></header>
+
+<main id="app"></main>
+<div class="toast" id="toast" hidden></div>
+
+<script>window.SADA_EMBED=true;</script>
+<script src="episodes/ep001.js"></script>
+<script src="episodes/ep002.js"></script>
+<script src="episodes/ep003.js"></script>
+<script src="episodes/ep004.js"></script>
+<script src="episodes/ep005.js"></script>
+<script src="episodes/ep006.js"></script>
+<script src="episodes/ep007.js"></script>
+<script src="episodes/ep008.js"></script>
+<script src="episodes/ep009.js"></script>
+<script src="episodes/ep010.js"></script>
+<script src="episodes/ep011.js"></script>
+<script src="episodes/ep012.js"></script>
+<script>
+(function(){
+const EPS = window.SADA_EPISODES || [];
+const $ = (s, r=document) => r.querySelector(s);
+const app = $('#app');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const HARAKAT = /[ً-ٰٟۖ-ۭ]/g;
+const strip = s => s.replace(HARAKAT, '');
+const norm = s => strip(s).replace(/[أإآٱ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').replace(/ـ/g,'').replace(/\s+/g,'');
+const shuffle = a => { a = a.slice(); for (let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const mmss = t => Math.floor(t/60)+':'+String(t%60).padStart(2,'0');
+const yt = (ep, t) => 'https://www.youtube.com/watch?v='+ep.youtubeId+(t?'&t='+t+'s':'');
+
+const ICONS = {"wake": "<path d=\"M3 19h18\"/><path d=\"M7 19a5 5 0 0 1 10 0\"/><path d=\"M12 7v3M5.6 10.6l1.8 1.8M18.4 10.6l-1.8 1.8M2 15h2M20 15h2\"/><path d=\"m9 5 3-3 3 3\"/>", "sun": "<circle cx=\"12\" cy=\"12\" r=\"4\"/><path d=\"M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4\"/>", "clock": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v5l3 2\"/>", "alarm": "<circle cx=\"12\" cy=\"13\" r=\"7\"/><path d=\"M12 10v3l2 2M5 3 2 6M19 3l3 3M7 19l-2 2M17 19l2 2\"/>", "bell": "<path d=\"M6 16v-5a6 6 0 0 1 12 0v5l2 2H4z\"/><path d=\"M10 21h4M2.5 8.5 4 9M21.5 8.5 20 9M3.5 4.5l1.5 1.5M20.5 4.5 19 6\"/>", "snooze": "<path d=\"M19 14.5A7.5 7.5 0 1 1 9.5 5a6 6 0 0 0 9.5 9.5z\"/><path d=\"M15 3h4l-4 4h4\"/>", "stopwatch": "<circle cx=\"12\" cy=\"14\" r=\"7\"/><path d=\"M12 14v-3.5M10 3h4M12 3v4M18 8l1.5-1.5\"/>", "bed": "<path d=\"M3 6v13M21 19v-6a2 2 0 0 0-2-2h-9v4\"/><path d=\"M3 15h18\"/><rect x=\"5\" y=\"11\" width=\"3.5\" height=\"3\" rx=\"1\"/>", "tidy": "<path d=\"M4 7h10M4 12h10M4 17h6\"/><path d=\"m14 17 2.5 2.5L21 15\"/>", "pillow": "<path d=\"M4 8c0-2 2-3 4-3h8c2 0 4 1 4 3v8c0 2-2 3-4 3H8c-2 0-4-1-4-3z\"/><path d=\"M4 8c1.5 1.5 1.5 6.5 0 8M20 8c-1.5 1.5-1.5 6.5 0 8\"/>", "habit": "<path d=\"m17 2 3 3-3 3\"/><path d=\"M4 11V9a4 4 0 0 1 4-4h12\"/><path d=\"m7 22-3-3 3-3\"/><path d=\"M20 13v2a4 4 0 0 1-4 4H4\"/>", "pot": "<path d=\"M4 10h16v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z\"/><path d=\"M2 10h2M20 10h2M9 7c0-1.2 1-1.2 1-2.5M14 7c0-1.2 1-1.2 1-2.5\"/>", "drink": "<path d=\"M6 5h12l-1.6 15H7.6z\"/><path d=\"M6.7 11h10.6\"/><path d=\"m13 8 3-6\"/>", "mug": "<path d=\"M4 8h12v8a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z\"/><path d=\"M16 10h2a2 2 0 0 1 0 4h-2\"/>", "warm": "<path d=\"M4 10h12v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z\"/><path d=\"M16 12h2a2 2 0 0 1 0 4h-2\"/><path d=\"M8 3c-1 1 1 2 0 4M12 3c-1 1 1 2 0 4\"/>", "cold": "<path d=\"M12 2v20M3.3 7l17.4 10M20.7 7 3.3 17\"/><path d=\"m9 4 3 2 3-2M9 20l3-2 3 2\"/>", "breakfast": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M8 11c0-3 3-4 5-3.5s3.5 2.5 3 4.5-2 4-4.5 4S8 14 8 11z\"/><circle cx=\"12\" cy=\"12\" r=\"1.6\"/>", "bath": "<path d=\"M3 12h18v2a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5z\"/><path d=\"M6 12V5a2 2 0 0 1 4 0\"/><path d=\"m7 19-1 2M17 19l1 2\"/>", "drop": "<path d=\"M12 3s-6 6.5-6 11a6 6 0 0 0 12 0c0-4.5-6-11-6-11z\"/><path d=\"M9.5 14.5a2.5 2.5 0 0 0 2.5 2.5\"/>", "face": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M9 10h.01M15 10h.01\"/><path d=\"M8.5 14.5a4 4 0 0 0 7 0\"/>", "tooth": "<path d=\"M7 3C4.5 3 3 5 3 8c0 3 1.5 4 2 7s1 6 2.5 6S9 17 12 17s3 4 4.5 4 2-3 2.5-6 2-4 2-7c0-3-1.5-5-4-5-2 0-3 1-5 1S9 3 7 3z\"/>", "brush": "<path d=\"M3 21 13 11\"/><path d=\"m12 8 4 4 5-5-4-4z\"/><path d=\"m14 6 1.5 1.5M16 4l1.5 1.5\"/>", "paste": "<path d=\"M9 3h6v3H9z\"/><path d=\"M8 6h8l-1 13-3 2-3-2z\"/><path d=\"M9 11h6\"/>", "towel": "<path d=\"M4 4h16v4H4z\"/><path d=\"M6 8v12h12V8\"/><path d=\"M6 16h12\"/>", "shower": "<path d=\"M4 21V8a4 4 0 0 1 8 0\"/><path d=\"M8.5 8h7\"/><path d=\"M10 12v1M12 12.5v1M14 12v1M11 16v1M13 16v1M12 19.5v1\"/>", "shirt": "<path d=\"M8 3 3 6l2 4 2-1v12h10V9l2 1 2-4-5-3a4 4 0 0 1-8 0z\"/>", "bag": "<rect x=\"3\" y=\"7\" width=\"18\" height=\"13\" rx=\"2\"/><path d=\"M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18\"/>", "key": "<circle cx=\"7.5\" cy=\"15.5\" r=\"4.5\"/><path d=\"M10.7 12.3 20 3M16 7l3 3M14 9l2 2\"/>", "wallet": "<path d=\"M3 8a2 2 0 0 1 2-2h12v2\"/><rect x=\"3\" y=\"8\" width=\"18\" height=\"12\" rx=\"2\"/><path d=\"M16 14h2\"/>", "phone": "<rect x=\"7\" y=\"2\" width=\"10\" height=\"20\" rx=\"2\"/><path d=\"M11 18h2\"/>", "wheel": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><circle cx=\"12\" cy=\"12\" r=\"2\"/><path d=\"M3.5 10H10M14 10h6.5M12 14v7\"/>", "crowd": "<circle cx=\"6\" cy=\"8\" r=\"2.5\"/><circle cx=\"18\" cy=\"8\" r=\"2.5\"/><circle cx=\"12\" cy=\"7\" r=\"2.5\"/><path d=\"M2 19a4 4 0 0 1 8 0M14 19a4 4 0 0 1 8 0M8 19a4 4 0 0 1 8 0\"/>", "bus": "<rect x=\"4\" y=\"3\" width=\"16\" height=\"15\" rx=\"3\"/><path d=\"M4 11h16M8 21v-3M16 21v-3\"/><circle cx=\"8\" cy=\"14.5\" r=\".9\"/><circle cx=\"16\" cy=\"14.5\" r=\".9\"/>", "sign": "<path d=\"M12 22V3\"/><path d=\"M6 5h11l2 2.5-2 2.5H6z\"/><path d=\"M8 22h8\"/>", "metro": "<rect x=\"5\" y=\"3\" width=\"14\" height=\"14\" rx=\"3\"/><path d=\"M5 10h14M9 21l1-4M15 21l-1-4M7 21h10\"/><circle cx=\"9\" cy=\"13.5\" r=\".9\"/><circle cx=\"15\" cy=\"13.5\" r=\".9\"/>", "cloud": "<path d=\"M7 18h10a4 4 0 0 0 .5-7.97A6 6 0 0 0 6.1 10.5 3.75 3.75 0 0 0 7 18z\"/>", "cloudsun": "<path d=\"M8 3v1.5M3.8 5.3l1 1M2 9.5h1.5M12.2 5.3l-1 1\"/><path d=\"M5.2 11.5a3.5 3.5 0 1 1 6.3-2.6\"/><path d=\"M9 20h8.5a3.5 3.5 0 0 0 .4-6.98A5 5 0 0 0 8.4 13.3 3.3 3.3 0 0 0 9 20z\"/>", "rain": "<path d=\"M7 14h10a4 4 0 0 0 .5-7.97A6 6 0 0 0 6.1 6.5 3.75 3.75 0 0 0 7 14z\"/><path d=\"m8.5 17-1 3M12.5 17l-1 3M16.5 17l-1 3\"/>", "snow": "<path d=\"M7 14h10a4 4 0 0 0 .5-7.97A6 6 0 0 0 6.1 6.5 3.75 3.75 0 0 0 7 14z\"/><circle cx=\"8\" cy=\"18\" r=\".9\"/><circle cx=\"12\" cy=\"18\" r=\".9\"/><circle cx=\"16\" cy=\"18\" r=\".9\"/><circle cx=\"10\" cy=\"21\" r=\".9\"/><circle cx=\"14\" cy=\"21\" r=\".9\"/>", "wind": "<path d=\"M3 8h10a3 3 0 1 0-3-3\"/><path d=\"M3 12h15a3 3 0 1 1-3 3\"/><path d=\"M3 16h7\"/>", "air": "<path d=\"M3 9c3-3 6 3 9 0s6 3 9 0\"/><path d=\"M3 15c3-3 6 3 9 0s6 3 9 0\"/>", "sunny": "<circle cx=\"12\" cy=\"12\" r=\"5\"/><path d=\"M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1\"/>", "thermo": "<path d=\"M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z\"/><path d=\"M12 9v8\"/>", "thermohot": "<path d=\"M12 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z\"/><path d=\"M10 7v10\"/><path d=\"M16 5l2.5-1M16 9h3M16 13l2.5 1\"/>", "thermocold": "<path d=\"M12 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z\"/><path d=\"M10 15.5v1.5\"/><path d=\"M18 3v6M15.4 4.5l5.2 3M20.6 4.5l-5.2 3\"/>", "calendar": "<rect x=\"3\" y=\"5\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M3 10h18M8 3v4M16 3v4\"/><path d=\"M8 14h3v3H8z\"/>", "summer": "<circle cx=\"12\" cy=\"9\" r=\"3.5\"/><path d=\"M12 2.5V4M4.5 9H6M18 9h1.5M7.4 4.4l1 1M16.6 4.4l-1 1\"/><path d=\"M3 17c2-1.5 4-1.5 6 0s4 1.5 6 0 4-1.5 6 0M3 21c2-1.5 4-1.5 6 0s4 1.5 6 0 4-1.5 6 0\"/>", "flower": "<circle cx=\"12\" cy=\"8\" r=\"1.8\"/><circle cx=\"12\" cy=\"4.4\" r=\"1.8\"/><circle cx=\"15.4\" cy=\"6.9\" r=\"1.8\"/><circle cx=\"14.1\" cy=\"10.9\" r=\"1.8\"/><circle cx=\"9.9\" cy=\"10.9\" r=\"1.8\"/><circle cx=\"8.6\" cy=\"6.9\" r=\"1.8\"/><path d=\"M12 12.7V21M12 18c-1.5-2-4-2.2-5-1.6 1 2 3.5 2.6 5 1.6z\"/>", "leaf": "<path d=\"M5 19C5 10 11 5 20 5c0 9-5 15-14 15\"/><path d=\"M4 20 13 11\"/>", "glasses": "<circle cx=\"6.5\" cy=\"14\" r=\"3.5\"/><circle cx=\"17.5\" cy=\"14\" r=\"3.5\"/><path d=\"M10 14c1-1 3-1 4 0M3 14 2.5 9M21 14l.5-5\"/>", "hat": "<path d=\"M2 17c2 1.5 18 1.5 20 0\"/><path d=\"M6.5 16.5C7 11 9 8 12 8s5 3 5.5 8.5\"/><path d=\"M7 14h10\"/>", "coat": "<path d=\"M9 3 5 5 3 21h6V9M15 3l4 2 2 16h-6V9\"/><path d=\"m9 3 3 5 3-5M12 8v13\"/>", "scarf": "<path d=\"M6 6c3 2 9 2 12 0\"/><path d=\"M6 6v3c3 2 9 2 12 0V6\"/><path d=\"m14 10.5 1.5 10 3-1-1.5-9.5\"/>", "glove": "<path d=\"M8 21v-3l-3-5a1.5 1.5 0 0 1 2.5-1.6L9 13V5a1.5 1.5 0 0 1 3 0v6V4a1.5 1.5 0 0 1 3 0v7V6a1.5 1.5 0 0 1 3 0v9c0 3-1 5-2 6z\"/>", "umbrella": "<path d=\"M3 12a9 9 0 0 1 18 0z\"/><path d=\"M12 12v7a2 2 0 0 1-4 0\"/><path d=\"M12 3V2\"/>", "utensils": "<path d=\"M7 2v8a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2V2M9 12v10M5 2v6M13 2v6\"/><path d=\"M19 22V2c-2 1-3 4-3 8h3\"/>", "waiter": "<circle cx=\"9\" cy=\"5\" r=\"2.5\"/><path d=\"M5 21v-7a4 4 0 0 1 8 0v7\"/><path d=\"m8 11 1 1.5 1-1.5\"/><path d=\"M13 12h8M14 12a3 3 0 0 1 6 0M17 9v.5\"/>", "table": "<path d=\"M3 9h18M5 9l-1 11M19 9l1 11M8 9v6h8V9\"/>", "menu": "<path d=\"M5 3h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5z\"/><path d=\"M5 3v18M9 8h6M9 12h6M9 16h4\"/>", "receipt": "<path d=\"M6 2h12v20l-3-2-3 2-3-2-3 2z\"/><path d=\"M9 7h6M9 11h6M9 15h3\"/>", "plate": "<circle cx=\"12\" cy=\"13\" r=\"8\"/><circle cx=\"12\" cy=\"13\" r=\"4.5\"/><path d=\"M3 6h18\"/>", "coins": "<ellipse cx=\"9\" cy=\"7\" rx=\"6\" ry=\"2.5\"/><path d=\"M3 7v4c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V7\"/><path d=\"M9 13.5v4c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5v-4c0-1.4-2.7-2.5-6-2.5\"/>", "want": "<path d=\"M8 12V5a1.5 1.5 0 0 1 3 0v6\"/><path d=\"M11 11V9.5a1.5 1.5 0 0 1 3 0V12M14 11.5a1.5 1.5 0 0 1 3 0V16a6 6 0 0 1-6 6h-1a5 5 0 0 1-4-2l-3-4.5a1.5 1.5 0 0 1 2.4-1.8L8 15\"/>", "please": "<path d=\"M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z\"/><path d=\"M9.5 11.5 11 13l3.5-3.5\"/>", "heart": "<path d=\"M12 21s-8-5-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 6-8 11-8 11z\"/>", "hand": "<path d=\"M18 11V6a2 2 0 0 0-4 0v5V4a2 2 0 0 0-4 0v7V6a2 2 0 0 0-4 0v8a8 8 0 0 0 16 0v-3a2 2 0 0 0-4 0\"/>", "bread": "<path d=\"M4 11a4 4 0 0 1 3-6h10a4 4 0 0 1 3 6v8a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z\"/><path d=\"M9 11l2-2M13 11l2-2\"/>", "chicken": "<path d=\"M15.5 3a5.5 5.5 0 0 1 0 11c-1.3 0-2 .5-3 1.5L10 18\"/><path d=\"M15.5 3A5.5 5.5 0 0 0 10 8.5c0 1.3-.5 2-1.5 3L6 14\"/><path d=\"M10 18l-2.5.5a2 2 0 1 1-2-3L6 14\"/>", "meat": "<path d=\"M15 4c3 0 6 3 5 7s-6 9-11 9-6-3-5-6 4-3 6-6 2-4 5-4z\"/><circle cx=\"14\" cy=\"10\" r=\"2\"/>", "fish": "<path d=\"M2 12c3-5 9-6 14-3l4-3v12l-4-3c-5 3-11 2-14-3z\"/><circle cx=\"8\" cy=\"11\" r=\".9\"/>", "rice": "<path d=\"M3 12h18a9 9 0 0 1-18 0z\"/><path d=\"M6 12c0-3 2-5 6-5s6 2 6 5\"/><path d=\"M9 9.5h.01M12 8.5h.01M15 9.5h.01\"/>", "salad": "<path d=\"M3 12h18a9 9 0 0 1-18 0z\"/><path d=\"M7 12c-1-3 1-6 4-5M13 12c0-3 3-5 6-3M10 12c1-3 4-4 5-2\"/>", "fries": "<path d=\"M5 10h14l-2 11H7z\"/><path d=\"M8 10V3M11 10V2M14 10V3M17 10V5M7 6v4\"/>", "bottle": "<path d=\"M10 2h4v3l2 3v12a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V8l2-3z\"/><path d=\"M8 12h8\"/>", "juice": "<path d=\"M6 7h12l-1.5 14h-9z\"/><path d=\"M6.7 12h10.6\"/><circle cx=\"17\" cy=\"5\" r=\"3\"/>", "flame": "<path d=\"M12 22c4 0 7-3 7-7 0-5-5-7-5-12-3 2-5 5-4 8-2-1-2-3-2-3-2 2-3 4-3 7 0 4 3 7 7 7z\"/><path d=\"M4 22h16\"/>", "pan": "<circle cx=\"10\" cy=\"13\" r=\"7\"/><path d=\"M17 13h6\"/><path d=\"M8 11c1-1 3-1 4 0\"/>", "yum": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M8.5 9.5h.01M15.5 9.5h.01\"/><path d=\"M8 14c2 3 6 3 8 0\"/><path d=\"M13 16.5c0 1.5 2 1.5 2 0\"/>", "teacher": "<rect x=\"3\" y=\"3\" width=\"18\" height=\"12\" rx=\"1\"/><path d=\"M7 8h6M7 11h4M8 21l2-6M16 21l-2-6\"/>", "briefcase": "<rect x=\"3\" y=\"7\" width=\"18\" height=\"13\" rx=\"2\"/><path d=\"M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 12h18M12 11v2\"/>", "helmet": "<path d=\"M2 18h20\"/><path d=\"M4 18v-3a8 8 0 0 1 16 0v3\"/><path d=\"M10 7.3V12M14 7.3V12\"/><path d=\"M9.5 7.5a8 8 0 0 1 5 0\"/>", "stethoscope": "<path d=\"M5 3v6a4 4 0 0 0 8 0V3\"/><path d=\"M9 13v2a5 5 0 0 0 10 0v-2\"/><circle cx=\"19\" cy=\"11\" r=\"2\"/><path d=\"M4 3h2M12 3h2\"/>", "seller": "<path d=\"M3 9 5 4h14l2 5\"/><path d=\"M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0\"/><path d=\"M5 12v8h14v-8M10 20v-5h4v5\"/>", "gradcap": "<path d=\"m2 9 10-5 10 5-10 5z\"/><path d=\"M6 11v5c3 2 9 2 12 0v-5M22 9v6\"/>", "newspaper": "<path d=\"M4 4h13v15a2 2 0 0 0 2 2H6a2 2 0 0 1-2-2z\"/><path d=\"M17 8h3v11a2 2 0 0 1-2 2\"/><path d=\"M7 8h7M7 12h7M7 16h4\"/>", "plane": "<path d=\"M21 4 3 11l7 3 3 7 8-17z\"/><path d=\"m10 14 4-4\"/>", "palette": "<path d=\"M12 3a9 9 0 0 0 0 18c1.5 0 2-1 2-2s-1-1.5-1-2.5 1-1.5 2-1.5h2a4 4 0 0 0 4-4c0-4.5-4-8-9-8z\"/><circle cx=\"7.5\" cy=\"11\" r=\"1\"/><circle cx=\"10\" cy=\"7\" r=\"1\"/><circle cx=\"15\" cy=\"7.5\" r=\"1\"/>", "school": "<path d=\"M3 21h18M5 21V10l7-5 7 5v11\"/><path d=\"M10 21v-5h4v5M12 5V2l3 1-3 1\"/>", "building": "<rect x=\"5\" y=\"3\" width=\"14\" height=\"18\" rx=\"1\"/><path d=\"M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2M10 21v-3h4v3\"/>", "hospital": "<rect x=\"4\" y=\"4\" width=\"16\" height=\"17\" rx=\"1\"/><path d=\"M12 8v6M9 11h6M10 21v-3h4v3\"/>", "shop": "<path d=\"M3 9 5 4h14l2 5\"/><path d=\"M3 9h18v2a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0z\"/><path d=\"M5 13v8h14v-8\"/><path d=\"M9 21v-4h6v4\"/>", "desk": "<path d=\"M2 12h20M4 12v8M20 12v8\"/><rect x=\"8\" y=\"4\" width=\"8\" height=\"6\" rx=\"1\"/><path d=\"M12 10v2\"/>", "university": "<path d=\"m3 9 9-5 9 5z\"/><path d=\"M5 9v9M9 9v9M15 9v9M19 9v9M3 21h18M3 18h18\"/>", "gear": "<circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1\"/>", "badge": "<rect x=\"4\" y=\"3\" width=\"16\" height=\"18\" rx=\"2\"/><circle cx=\"12\" cy=\"10\" r=\"3\"/><path d=\"M8 17c1-2 7-2 8 0\"/>", "ask": "<path d=\"M4 5h16v11H9l-5 4z\"/><path d=\"M10 9a2 2 0 1 1 3 1.7c-.6.4-1 .8-1 1.3M12 14h.01\"/>", "search": "<circle cx=\"11\" cy=\"11\" r=\"7\"/><path d=\"m20 20-4-4\"/>", "laptop": "<rect x=\"5\" y=\"4\" width=\"14\" height=\"10\" rx=\"1\"/><path d=\"M2 18h20l-2-4H4z\"/>", "busy": "<circle cx=\"12\" cy=\"13\" r=\"8\"/><path d=\"M12 9v4l3 2M9 2h6\"/><path d=\"M19 5l2 2\"/>", "tired": "<rect x=\"2\" y=\"7\" width=\"18\" height=\"10\" rx=\"2\"/><path d=\"M22 11v2M5 10v4\"/>", "mountain": "<path d=\"m3 20 6-11 4 6 2-3 6 8z\"/><path d=\"m9 9 1.5 3\"/>", "sweat": "<circle cx=\"11\" cy=\"13\" r=\"8\"/><path d=\"M8 12h.01M14 12h.01M8.5 16.5h5\"/><path d=\"M19 3s-2 2.5-2 4a2 2 0 0 0 4 0c0-1.5-2-4-2-4z\"/>", "car": "<path d=\"M3 16v-3l2-5a2 2 0 0 1 2-1h10a2 2 0 0 1 2 1l2 5v3a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z\"/><path d=\"M3 13h18\"/><circle cx=\"7.5\" cy=\"17\" r=\"1.8\"/><circle cx=\"16.5\" cy=\"17\" r=\"1.8\"/>", "seatbelt": "<circle cx=\"12\" cy=\"5\" r=\"2.5\"/><path d=\"M7 21v-8a5 5 0 0 1 10 0v8\"/><path d=\"M8 9.5 16 19\"/><rect x=\"11.5\" y=\"14.5\" width=\"3\" height=\"2.5\" rx=\".5\" transform=\"rotate(50 13 15.7)\"/>", "mirror": "<rect x=\"3\" y=\"6\" width=\"18\" height=\"8\" rx=\"4\"/><path d=\"M12 14v4M9 20h6\"/>", "brake": "<rect x=\"6\" y=\"9\" width=\"12\" height=\"9\" rx=\"2\"/><path d=\"M12 9V3M9 13h6\"/><path d=\"M8 21h8\"/>", "fuel": "<path d=\"M6 21V7l3-4h6v18z\"/><path d=\"M6 11h9\"/><path d=\"M15 9h2l2 3v6a1.5 1.5 0 0 1-3 0v-3h-1\"/>", "engine": "<path d=\"M4 10h3l2-2h5l2 2h2v3h2v-2h1v6h-1v-2h-2v3h-3l-2 2H8v-2H4z\"/><path d=\"M8 5h6M11 5v3\"/>", "tire": "<circle cx=\"12\" cy=\"12\" r=\"9.5\"/><circle cx=\"12\" cy=\"12\" r=\"5\"/><circle cx=\"12\" cy=\"12\" r=\"1.5\"/><path d=\"M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8\"/>", "license": "<rect x=\"2\" y=\"5\" width=\"20\" height=\"14\" rx=\"2\"/><circle cx=\"8\" cy=\"11\" r=\"2.2\"/><path d=\"M5 16c.7-1.5 5.3-1.5 6 0M14 9h5M14 12h5M14 15h3\"/>", "test": "<rect x=\"5\" y=\"3\" width=\"14\" height=\"18\" rx=\"2\"/><path d=\"M9 3v2h6V3\"/><path d=\"m8.5 11 1.5 1.5 3-3M8.5 16.5l1.5 1.5 3-3\"/>", "speed": "<path d=\"M4 17a8 8 0 1 1 16 0\"/><path d=\"m12 17 4-5\"/><path d=\"M6 13h1M12 9v1M17 13h1M8 10l.7.7\"/>", "usedcar": "<path d=\"M3 16v-3l2-5a2 2 0 0 1 2-1h7\"/><path d=\"M3 13h11v4H4a1 1 0 0 1-1-1z\"/><circle cx=\"7.5\" cy=\"17\" r=\"1.8\"/><path d=\"M15 3h6v6l-4 4-6-6z\"/><circle cx=\"18\" cy=\"6\" r=\".8\"/>", "road": "<path d=\"M8 3 5 21M16 3l3 18\"/><path d=\"M12 4v3M12 10v3M12 16v3\"/>", "trafficlight": "<rect x=\"8\" y=\"2\" width=\"8\" height=\"17\" rx=\"2\"/><circle cx=\"12\" cy=\"6\" r=\"1.6\"/><circle cx=\"12\" cy=\"10.5\" r=\"1.6\"/><circle cx=\"12\" cy=\"15\" r=\"1.6\"/><path d=\"M12 19v3\"/>", "walker": "<circle cx=\"13\" cy=\"4\" r=\"2\"/><path d=\"m9 21 3-7 3 3v4M7 12l3-4 4 1 3 3M12 14l-1-5\"/>", "crossing": "<path d=\"M3 4v16M21 4v16\"/><path d=\"M7 5v3M7 11v3M7 17v2M12 5v3M12 11v3M12 17v2M17 5v3M17 11v3M17 17v2\"/>", "traffic": "<path d=\"M2 12v-2l1.5-3.5A1.5 1.5 0 0 1 5 5.5h5a1.5 1.5 0 0 1 1.4 1L13 10v2H2z\"/><circle cx=\"4.5\" cy=\"12.5\" r=\"1.2\"/><circle cx=\"10.5\" cy=\"12.5\" r=\"1.2\"/><path d=\"M11 19v-2l1.5-3.5A1.5 1.5 0 0 1 14 12.5h5a1.5 1.5 0 0 1 1.4 1L22 17v2H11z\"/><circle cx=\"13.5\" cy=\"19.5\" r=\"1.2\"/><circle cx=\"19.5\" cy=\"19.5\" r=\"1.2\"/>", "pump": "<rect x=\"4\" y=\"3\" width=\"10\" height=\"18\" rx=\"1\"/><path d=\"M4 9h10M2 21h14\"/><path d=\"M14 7h2l3 3v7a1.5 1.5 0 0 1-3 0v-4h-2\"/>", "ticket": "<path d=\"M6 2h12v20l-3-2-3 2-3-2-3 2z\"/><path d=\"M12 6v8M10 8.5c0-1.5 4-1.5 4 0s-4 1.5-4 3 4 1.5 4 0\"/>", "dotred": "<circle cx=\"12\" cy=\"12\" r=\"8\" fill=\"#D94A3D\" stroke=\"none\"/>", "dotyellow": "<circle cx=\"12\" cy=\"12\" r=\"8\" fill=\"#E9B530\" stroke=\"none\"/>", "dotgreen": "<circle cx=\"12\" cy=\"12\" r=\"8\" fill=\"#2E9E62\" stroke=\"none\"/>", "dotwhite": "<circle cx=\"12\" cy=\"12\" r=\"8\" fill=\"#FFFFFF\"/>", "shield": "<path d=\"M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z\"/><path d=\"m9 12 2 2 4-4\"/>", "pill": "<rect x=\"3\" y=\"8.5\" width=\"18\" height=\"7\" rx=\"3.5\" transform=\"rotate(-35 12 12)\"/><path d=\"m9.5 8.4 4.6 6.6\"/>", "army": "<path d=\"M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z\"/><path d=\"M8 10h8M8 13.5h8M8 17h8\"/>", "sick": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M8.5 10h1M14.5 10h1M8.5 16c1-1.2 2.2-1.6 3.5-1.6s2.5.4 3.5 1.6\"/><path d=\"M17 3.5v4M15 5.5h4\"/>", "virus": "<circle cx=\"12\" cy=\"12\" r=\"5.5\"/><circle cx=\"10.5\" cy=\"11\" r=\"1\"/><circle cx=\"13.5\" cy=\"13.5\" r=\".8\"/><path d=\"M12 6.5V4M12 17.5V20M6.5 12H4M17.5 12H20M8.1 8.1 6.4 6.4M15.9 15.9l1.7 1.7M15.9 8.1l1.7-1.7M8.1 15.9l-1.7 1.7\"/><circle cx=\"12\" cy=\"3\" r=\"1\"/><circle cx=\"12\" cy=\"21\" r=\"1\"/><circle cx=\"3\" cy=\"12\" r=\"1\"/><circle cx=\"21\" cy=\"12\" r=\"1\"/><circle cx=\"5.6\" cy=\"5.6\" r=\"1\"/><circle cx=\"18.4\" cy=\"18.4\" r=\"1\"/><circle cx=\"18.4\" cy=\"5.6\" r=\"1\"/><circle cx=\"5.6\" cy=\"18.4\" r=\"1\"/>", "contagion": "<circle cx=\"6\" cy=\"7\" r=\"2.5\"/><path d=\"M2.5 20v-3a3.5 3.5 0 0 1 7 0v3\"/><circle cx=\"18\" cy=\"7\" r=\"2.5\"/><path d=\"M14.5 20v-3a3.5 3.5 0 0 1 7 0v3\"/><path d=\"M10.5 11.5h3M12 10v3\" /><circle cx=\"12\" cy=\"11.5\" r=\"2.2\"/>", "pharmacy": "<rect x=\"4\" y=\"4\" width=\"16\" height=\"16\" rx=\"3\"/><path d=\"M12 8v8M8 12h8\"/>", "moon": "<path d=\"M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z\"/>", "owl": "<path d=\"M6 4l2 3h8l2-3v10a6 6 0 0 1-12 0z\"/><circle cx=\"9.5\" cy=\"11\" r=\"2\"/><circle cx=\"14.5\" cy=\"11\" r=\"2\"/><path d=\"m11 15 1 1.2 1-1.2\"/>", "soap": "<rect x=\"3\" y=\"11\" width=\"18\" height=\"9\" rx=\"3\"/><circle cx=\"9\" cy=\"6\" r=\"2\"/><circle cx=\"15\" cy=\"4.5\" r=\"1.5\"/><circle cx=\"16\" cy=\"8.5\" r=\"1\"/>", "window": "<rect x=\"4\" y=\"3\" width=\"16\" height=\"18\" rx=\"1.5\"/><path d=\"M12 3v18M4 12h16\"/>", "run": "<circle cx=\"15\" cy=\"4\" r=\"2\"/><path d=\"m5 21 4-5 3 2 1 3M8 12l3-4 4 2 2 3 3 1M11 8l1 10\"/>", "mask": "<path d=\"M4 9c3-1 13-1 16 0v4c0 3-4 6-8 6s-8-3-8-6z\"/><path d=\"M4 10 1.5 8.5M20 10l2.5-1.5M8 12h8M8 15h8\"/>", "orange": "<circle cx=\"12\" cy=\"13.5\" r=\"7.5\"/><path d=\"M12 6c0-2 1-3 3-3.5M12 6c-1.5-1.5-3.5-1.5-4.5-1\"/>", "garlic": "<path d=\"M12 3c0 3-7 6-7 11a7 7 0 0 0 14 0c0-5-7-8-7-11z\"/><path d=\"M12 9c-2 3-2 8 0 12M12 9c2 3 2 8 0 12\"/>", "ginger": "<path d=\"M4 15c0-3 3-4 5-3 1-3 4-4 6-2 2-2 5 0 5 3s-3 4-5 3c-1 2-4 3-6 1-2 1-5 1-5-2z\"/><path d=\"M9 12l-1-3M15 10l1-3\"/>", "honey": "<path d=\"M6 9h12v9a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3z\"/><path d=\"M5 9h14M8 6h8v3H8z\"/><path d=\"M9 14c1 1 2 1 3 0s2-1 3 0\"/>", "stress": "<circle cx=\"12\" cy=\"13\" r=\"8\"/><path d=\"M8.5 11l2 1-2 1M15.5 11l-2 1 2 1M9 17.5h6\"/><path d=\"M7 2.5l1.5 2M12 1.5v2.5M17 2.5l-1.5 2\"/>", "sneeze": "<circle cx=\"9\" cy=\"12\" r=\"7\"/><path d=\"M6 10.5h2M10 10.5h2M7 15h4\"/><path d=\"M17.5 8l3-1.5M18 12h3.5M17.5 16l3 1.5\"/>", "cough": "<circle cx=\"9\" cy=\"12\" r=\"7\"/><path d=\"M6 10.5h2M10 10.5h2\"/><circle cx=\"9\" cy=\"15\" r=\"1.3\"/><path d=\"M17 9c1.5 1 1.5 5 0 6M19.5 7c2.5 2 2.5 8 0 10\"/>", "throat": "<path d=\"M8 3c-1 3-1 6 0 8l1 10M16 3c1 3 1 6 0 8l-1 10\"/><path d=\"M12 13v3M10.5 14.5h3\" />", "bandage": "<rect x=\"2\" y=\"8\" width=\"20\" height=\"8\" rx=\"4\" transform=\"rotate(-40 12 12)\"/><rect x=\"9\" y=\"9\" width=\"6\" height=\"6\" rx=\"1\" transform=\"rotate(-40 12 12)\"/><path d=\"M11 11.5h.01M13 12.5h.01\"/>", "atom": "<circle cx=\"12\" cy=\"12\" r=\"1.6\"/><ellipse cx=\"12\" cy=\"12\" rx=\"9.5\" ry=\"3.8\"/><ellipse cx=\"12\" cy=\"12\" rx=\"9.5\" ry=\"3.8\" transform=\"rotate(60 12 12)\"/><ellipse cx=\"12\" cy=\"12\" rx=\"9.5\" ry=\"3.8\" transform=\"rotate(120 12 12)\"/>", "stack": "<rect x=\"5\" y=\"16\" width=\"14\" height=\"4\" rx=\"1\"/><rect x=\"6.5\" y=\"11\" width=\"11\" height=\"4\" rx=\"1\"/><rect x=\"8\" y=\"6\" width=\"8\" height=\"4\" rx=\"1\"/><path d=\"M12 2v2.5\"/>", "target": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><circle cx=\"12\" cy=\"12\" r=\"5.5\"/><circle cx=\"12\" cy=\"12\" r=\"2\"/><path d=\"m12 12 7-7M16 5h3v3\"/>", "steps": "<path d=\"M3 20h5v-4h5v-4h5V8h3\"/><path d=\"M17 3l3 2-3 2\"/>", "idcard": "<rect x=\"2.5\" y=\"5\" width=\"19\" height=\"14\" rx=\"2\"/><circle cx=\"8.5\" cy=\"11\" r=\"2.3\"/><path d=\"M5 16.5c.6-1.8 2-2.6 3.5-2.6s2.9.8 3.5 2.6M14.5 10h4M14.5 13.5h3\"/>", "change": "<path d=\"M4 10a8 8 0 0 1 14.5-3.5L20 8\"/><path d=\"M20 3.5V8h-4.5\"/><path d=\"M20 14a8 8 0 0 1-14.5 3.5L4 16\"/><path d=\"M4 20.5V16h4.5\"/>", "eye": "<path d=\"M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/>", "magnet": "<path d=\"M6 3v8a6 6 0 0 0 12 0V3h-4v8a2 2 0 0 1-4 0V3z\"/><path d=\"M6 7h4M14 7h4\"/>", "feather": "<path d=\"M20 4C11 4 6 9 6 18l-2 2\"/><path d=\"M6 18c6 0 10-3 12-8M9 13h6\"/>", "smile": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M8.5 10h.01M15.5 10h.01M8 14.5c1 1.5 2.4 2.2 4 2.2s3-.7 4-2.2\"/>", "gift": "<rect x=\"3.5\" y=\"9\" width=\"17\" height=\"11\" rx=\"1.5\"/><path d=\"M2.5 9h19M12 9v11\"/><path d=\"M12 9c-1.5-3-5-4-5-1.5S10 9 12 9zM12 9c1.5-3 5-4 5-1.5S14 9 12 9z\"/>", "brain": "<path d=\"M12 5a3 3 0 0 0-5.5 1.5A3 3 0 0 0 4 10a3 3 0 0 0 1 4.5A3 3 0 0 0 8 19a3 3 0 0 0 4-1z\"/><path d=\"M12 5a3 3 0 0 1 5.5 1.5A3 3 0 0 1 20 10a3 3 0 0 1-1 4.5A3 3 0 0 1 16 19a3 3 0 0 1-4-1z\"/><path d=\"M12 5v13\"/>", "hourglass": "<path d=\"M6 3h12M6 21h12\"/><path d=\"M7.5 3v2.5c0 2 1.5 3.5 4.5 6.5 3-3 4.5-4.5 4.5-6.5V3M7.5 21v-2.5c0-2 1.5-3.5 4.5-6.5 3 3 4.5 4.5 4.5 6.5V21\"/><path d=\"M9.5 19h5\"/>", "frown": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M8.5 10h.01M15.5 10h.01M8 16.5c1-1.4 2.4-2 4-2s3 .6 4 2\"/>", "valley": "<path d=\"M2 7c4 0 5 11 10 11S18 7 22 7\"/><path d=\"M12 18v-5M10 15l2-2 2 2\" /><circle cx=\"12\" cy=\"10\" r=\"1.3\"/>", "ice": "<path d=\"M12 3 20 7.5v9L12 21 4 16.5v-9z\"/><path d=\"M4 7.5 12 12l8-4.5M12 12v9\"/><path d=\"M7 9.5l2 1\"/>", "cigarette": "<rect x=\"2.5\" y=\"13\" width=\"19\" height=\"4\" rx=\"1\"/><path d=\"M16 13v4\"/><path d=\"M18 10c0-1.5 2-1.5 2-3s-1.5-2-1.5-3.5M15 10c0-1.5 1.5-2 1.5-3.5\"/>", "checklist": "<rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\"/><path d=\"M3 9h18M3 15h18M9 3v18M15 3v18\"/><path d=\"m4.5 5.8 1 1 2-2M10.5 5.8l1 1 2-2M16.5 11.8l1 1 2-2M4.5 11.8l1 1 2-2\"/>", "chip": "<rect x=\"6\" y=\"6\" width=\"12\" height=\"12\" rx=\"2\"/><rect x=\"9.5\" y=\"9.5\" width=\"5\" height=\"5\" rx=\".5\"/><path d=\"M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4\"/>", "database": "<ellipse cx=\"12\" cy=\"5.5\" rx=\"7.5\" ry=\"3\"/><path d=\"M4.5 5.5v13c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-13\"/><path d=\"M4.5 12c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3\"/>", "app": "<rect x=\"3\" y=\"3\" width=\"7.5\" height=\"7.5\" rx=\"2\"/><rect x=\"13.5\" y=\"3\" width=\"7.5\" height=\"7.5\" rx=\"2\"/><rect x=\"3\" y=\"13.5\" width=\"7.5\" height=\"7.5\" rx=\"2\"/><rect x=\"13.5\" y=\"13.5\" width=\"7.5\" height=\"7.5\" rx=\"2\"/>", "robot": "<rect x=\"4.5\" y=\"8\" width=\"15\" height=\"11\" rx=\"3\"/><path d=\"M12 8V4.5\"/><circle cx=\"12\" cy=\"3.5\" r=\"1.2\"/><circle cx=\"9\" cy=\"13\" r=\"1.3\"/><circle cx=\"15\" cy=\"13\" r=\"1.3\"/><path d=\"M10 16.5h4M2.5 12v3M21.5 12v3\"/>", "map": "<path d=\"M3 6.5 9 4l6 2.5 6-2.5v13.5l-6 2.5-6-2.5-6 2.5z\"/><path d=\"M9 4v13.5M15 6.5V20\"/>", "mic": "<rect x=\"9\" y=\"3\" width=\"6\" height=\"11\" rx=\"3\"/><path d=\"M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7\"/>", "vacuum": "<circle cx=\"12\" cy=\"13\" r=\"8.5\"/><circle cx=\"12\" cy=\"13\" r=\"3.5\"/><path d=\"M12 4.5v2M6 7l1.4 1.4M18 7l-1.4 1.4\"/><circle cx=\"12\" cy=\"13\" r=\".8\"/>", "megaphone": "<path d=\"M3 10v4h3l9 5V5L6 10z\"/><path d=\"M6 14l1.5 5.5h2.5L9 15\"/><path d=\"M18 9.5a3.5 3.5 0 0 1 0 5\"/>", "cart": "<path d=\"M2.5 3.5h2.5l2.5 11.5h11l2-8H6\"/><circle cx=\"9\" cy=\"19.5\" r=\"1.5\"/><circle cx=\"17.5\" cy=\"19.5\" r=\"1.5\"/>", "translate": "<path d=\"M3 5h9M7.5 3v2M5 5c.5 3 2.5 5.5 5.5 7M10 5c-.5 3-2.5 5.5-6 7.5\"/><path d=\"M12 21l4.5-10 4.5 10M13.5 17.5h6\"/>", "book": "<path d=\"M12 6.5C10 5 7 4.5 3 4.5v14c4 0 7 .5 9 2 2-1.5 5-2 9-2v-14c-4 0-7 .5-9 2z\"/><path d=\"M12 6.5v14\"/>", "wrong": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"m8.5 8.5 7 7M15.5 8.5l-7 7\"/>", "chat": "<path d=\"M4 5h11a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H9l-4 3.5V15H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z\"/><path d=\"M17 9h3a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-1v3l-3.5-3H12a2 2 0 0 1-1.5-.7\"/>", "pencheck": "<path d=\"M15 4l5 5L9 20H4v-5z\"/><path d=\"M13 6l5 5\"/><path d=\"m3 4.5 1.5 1.5L7.5 3\"/>", "calculator": "<rect x=\"5\" y=\"2.5\" width=\"14\" height=\"19\" rx=\"2\"/><rect x=\"8\" y=\"5.5\" width=\"8\" height=\"3.5\" rx=\".5\"/><path d=\"M8.5 12.5h.01M12 12.5h.01M15.5 12.5h.01M8.5 15.5h.01M12 15.5h.01M15.5 15.5h.01M8.5 18.5h.01M12 18.5h.01M15.5 18.5h.01\"/>", "rocket": "<path d=\"M12 2.5c3.5 2.5 5 6 5 10l-2 3H9l-2-3c0-4 1.5-7.5 5-10z\"/><circle cx=\"12\" cy=\"9.5\" r=\"1.8\"/><path d=\"M7 12.5 4 15l1.5 3L9 15.5M17 12.5l3 2.5-1.5 3-3.5-2.5M10.5 18.5 12 22l1.5-3.5\"/>", "wrench": "<path d=\"M14.5 6.5a4 4 0 0 1 5-3.8l-2.5 2.5.5 2.5 2.5.5 2.5-2.5a4 4 0 0 1-5.5 4.6L8 19.5a2 2 0 0 1-3-3l9.2-9.2c.2-.3.3-.5.3-.8z\"/>", "handshake": "<path d=\"M2 11l4-4 4 2 3-2 3 1 4 3\"/><path d=\"M2 11l3 3M22 11l-3 3\"/><path d=\"M8 13l2.5 2.5a1.4 1.4 0 0 0 2-2L10 11M11 15l2 2a1.4 1.4 0 0 0 2-2l-2-2M14 16.5l.8.8a1.4 1.4 0 0 0 2-2L13 11.5\"/>", "globe": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M3 12h18M12 3c2.5 2.5 3.7 5.5 3.7 9s-1.2 6.5-3.7 9c-2.5-2.5-3.7-5.5-3.7-9S9.5 5.5 12 3z\"/>", "export": "<path d=\"M4 14v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5\"/><path d=\"M12 15V3M7.5 7.5 12 3l4.5 4.5\"/>", "import": "<path d=\"M4 14v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5\"/><path d=\"M12 3v12M7.5 10.5 12 15l4.5-4.5\"/>", "box": "<path d=\"M12 2.5 20.5 7v10L12 21.5 3.5 17V7z\"/><path d=\"M3.5 7 12 11.5 20.5 7M12 11.5v10M7.8 4.8l8.4 4.6\"/>", "chart": "<path d=\"M3 3v18h18\"/><rect x=\"6.5\" y=\"12\" width=\"3\" height=\"6\"/><rect x=\"11.5\" y=\"8\" width=\"3\" height=\"10\"/><rect x=\"16.5\" y=\"5\" width=\"3\" height=\"13\"/>", "oil": "<path d=\"M5 8h11l3 3v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1z\"/><path d=\"M8 8V5h5v3M5 13h14\"/><path d=\"M12 15.5c-1 1.3-1.5 2-1.5 2.7a1.5 1.5 0 0 0 3 0c0-.7-.5-1.4-1.5-2.7z\"/>", "cotton": "<circle cx=\"9\" cy=\"8\" r=\"3\"/><circle cx=\"15\" cy=\"8\" r=\"3\"/><circle cx=\"12\" cy=\"11.5\" r=\"3\"/><path d=\"M12 14.5V21M9 17.5l3 1.5 3-1.5\"/>", "gem": "<path d=\"M6 3h12l3.5 5L12 21 2.5 8z\"/><path d=\"M2.5 8h19M9 3 7.5 8 12 21l4.5-13L15 3\"/>", "parcel": "<rect x=\"3\" y=\"7\" width=\"18\" height=\"13\" rx=\"1.5\"/><path d=\"M3 11h18M10 7V3.5h4V7M10 11v3h4v-3\"/>", "ship": "<path d=\"M3 15h18l-2.5 5h-13z\"/><path d=\"M5 15V9h14v6M8 9V6h8v3\"/><path d=\"M8.5 11.5h2M13.5 11.5h2\"/><path d=\"M2 22c2 0 2-1 4-1s2 1 4 1 2-1 4-1 2 1 4 1 2-1 4-1\"/>", "container": "<rect x=\"2.5\" y=\"6\" width=\"19\" height=\"12\" rx=\"1\"/><path d=\"M6.5 6v12M10.5 6v12M14.5 6v12M18.5 6v12\"/>", "anchor": "<circle cx=\"12\" cy=\"5\" r=\"2\"/><path d=\"M12 7v14M8 10.5h8M4.5 13.5a7.5 7.5 0 0 0 15 0\"/><path d=\"M4.5 13.5 3 15M19.5 13.5 21 15\"/>", "truck": "<rect x=\"2\" y=\"6\" width=\"12\" height=\"10\" rx=\"1\"/><path d=\"M14 9h4l3.5 3.5V16H14z\"/><circle cx=\"6\" cy=\"18\" r=\"2\"/><circle cx=\"17.5\" cy=\"18\" r=\"2\"/>", "dollar": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M15 9.2c-.5-1-1.6-1.7-3-1.7-1.8 0-3 .9-3 2.2 0 3 6 1.6 6 4.6 0 1.3-1.3 2.2-3 2.2-1.5 0-2.6-.7-3.1-1.8M12 6v1.5M12 16.5V18\"/>", "tag": "<path d=\"M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9z\"/><circle cx=\"7.5\" cy=\"7.5\" r=\"1.5\"/>", "border": "<path d=\"M12 2v20\" stroke-dasharray=\"2.5 2.5\"/><path d=\"M8 8 4 12l4 4M4 12h5M16 8l4 4-4 4M20 12h-5\"/>", "star": "<path d=\"M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z\"/>", "vendor": "<circle cx=\"12\" cy=\"6\" r=\"3\"/><path d=\"M6.5 14a5.5 5.5 0 0 1 11 0\"/><rect x=\"2.5\" y=\"14\" width=\"19\" height=\"3\" rx=\"1\"/><path d=\"M4.5 17v4M19.5 17v4\"/>", "scroll": "<path d=\"M6 4h11a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6\"/><path d=\"M6 4a2 2 0 0 0-2 2v1h4V6a2 2 0 0 0-2-2zM6 20a2 2 0 0 1-2-2v-1h4v1a2 2 0 0 1-2 2\"/><path d=\"M10 9h6M10 12h6M10 15h4\"/>", "whiteflag": "<path d=\"M5 21V3\"/><path d=\"M5 4h11l-2 4 2 4H5\"/>", "document": "<path d=\"M6 2.5h8l4 4V21a.5.5 0 0 1-.5.5h-11A.5.5 0 0 1 6 21z\"/><path d=\"M14 2.5V7h4M9 11h6M9 14h6\"/><path d=\"M9 18c1-1 1.5-1 2 0s1 1 2 0 1.5-1 2 0\"/>", "attack": "<path d=\"M3 12h13M12 7l5 5-5 5\"/><path d=\"M19 5v14\"/>", "inflation": "<path d=\"M3 20h18\"/><path d=\"M5 17l4-4 3 2 6-7\"/><path d=\"M14 8h4v4\"/>", "banknote": "<rect x=\"2.5\" y=\"6\" width=\"19\" height=\"12\" rx=\"1.5\"/><circle cx=\"12\" cy=\"12\" r=\"2.8\"/><path d=\"M5.5 9v.01M18.5 15v.01\"/>", "angry": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M7.5 8.5l3 1.5M16.5 8.5l-3 1.5M8.5 16.5c1-1.2 2.2-1.8 3.5-1.8s2.5.6 3.5 1.8M9.5 12h.01M14.5 12h.01\"/>", "sunrise": "<path d=\"M2 18h20M6 18a6 6 0 0 1 12 0\"/><path d=\"M12 3v5M4.5 9.5l2 2M19.5 9.5l-2 2M9.5 6l2.5-3 2.5 3\"/>", "leader": "<circle cx=\"12\" cy=\"9\" r=\"3\"/><path d=\"M6.5 20a5.5 5.5 0 0 1 11 0\"/><path d=\"M8 4.5l1.5 1.5L12 3l2.5 3L16 4.5V6H8z\"/>", "bird": "<path d=\"M2 8c3.5 0 6.5 2 10 6 3.5-4 6.5-6 10-6\"/><path d=\"M6 15c2 0 4 .8 6 2.5 2-1.7 4-2.5 6-2.5\"/>", "ballot": "<rect x=\"4\" y=\"11\" width=\"16\" height=\"10\" rx=\"1\"/><path d=\"M8 11V3h8v8\"/><path d=\"m10 7 1.5 1.5L14 5.5M9 15h6\"/>", "podium": "<path d=\"M6 12h12l-1.5 9h-9z\"/><path d=\"M12 12V8\"/><circle cx=\"12\" cy=\"5.5\" r=\"2.2\"/><path d=\"M5 12h14\"/>", "brokenheart": "<path d=\"M12 20s-8-4.6-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 9c0 6.4-8 11-8 11z\"/><path d=\"M12 6.2 10 10l3 2-2 4\"/>", "dove": "<path d=\"M3 13c4 0 6-2 8-6 1 3 3 4 6 4l3-2-.5 3c-.8 3.5-4 6-8 6-2.5 0-4.5-1-5.5-2.5L3 19z\"/><path d=\"M11 7c-1-2-3-3.5-6-3.5 0 3 1.5 5 4 6\"/><path d=\"M16.5 11h.01\"/>", "scale": "<path d=\"M12 3v18M7 21h10M5 6h14\"/><path d=\"M5 6l-3 7a3 3 0 0 0 6 0zM19 6l-3 7a3 3 0 0 0 6 0z\"/>", "boss": "<circle cx=\"12\" cy=\"6.5\" r=\"3.5\"/><path d=\"M5 21v-2a7 7 0 0 1 14 0v2\"/><path d=\"M12 12.5l-1.2 2 1.2 4.5 1.2-4.5z\"/>", "pair": "<circle cx=\"8\" cy=\"7\" r=\"3\"/><circle cx=\"16.5\" cy=\"7\" r=\"3\"/><path d=\"M2.5 20v-1.5a5.5 5.5 0 0 1 11 0V20M13.5 20v-1.5a5 5 0 0 1 8 0V20\"/>", "meeting": "<ellipse cx=\"12\" cy=\"16\" rx=\"8\" ry=\"3\"/><circle cx=\"12\" cy=\"6\" r=\"2\"/><circle cx=\"5\" cy=\"9\" r=\"2\"/><circle cx=\"19\" cy=\"9\" r=\"2\"/><path d=\"M4 16v4M20 16v4\"/>", "client": "<circle cx=\"10\" cy=\"7\" r=\"3.5\"/><path d=\"M3 21v-1.5A7 7 0 0 1 14.5 15\"/><path d=\"m15 18 2 2 4-4\"/>", "crown": "<path d=\"M3 8l4 4 5-7 5 7 4-4-2 11H5z\"/><path d=\"M5 19h14\"/>", "brave": "<path d=\"M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z\"/><path d=\"M12 8.5l1.2 2.4 2.6.4-1.9 1.8.5 2.6-2.4-1.3-2.4 1.3.5-2.6-1.9-1.8 2.6-.4z\"/>", "blush": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M8.5 10h.01M15.5 10h.01M10 15.5c1.2.7 2.8.7 4 0\"/><path d=\"M6 13.5h2M16 13.5h2\"/>", "medal": "<circle cx=\"12\" cy=\"15\" r=\"5.5\"/><path d=\"M8.5 10.5 6 3h4l2 4.5L14 3h4l-2.5 7.5\"/><path d=\"m12 12.5.9 1.8 2 .3-1.4 1.4.3 2-1.8-1-1.8 1 .3-2-1.4-1.4 2-.3z\"/>", "notes": "<rect x=\"5\" y=\"3\" width=\"14\" height=\"18\" rx=\"1.5\"/><path d=\"M8.5 8h7M8.5 11.5h7M8.5 15h4\"/><path d=\"M9 3V1.5M15 3V1.5\"/>", "posture": "<circle cx=\"12\" cy=\"4\" r=\"2\"/><path d=\"M12 6.5V14M8 9.5h8M12 14l-3 7M12 14l3 7\"/><path d=\"M5 22h14\"/>", "thought": "<path d=\"M6 13a5 5 0 0 1 1-9.5A5.5 5.5 0 0 1 17 3a4.5 4.5 0 0 1 1.5 8.5A4 4 0 0 1 13 14H8a2.5 2.5 0 0 1-2-1z\"/><circle cx=\"7\" cy=\"17.5\" r=\"1.5\"/><circle cx=\"4.5\" cy=\"21\" r=\"1\"/>", "trophy": "<path d=\"M7 4h10v5a5 5 0 0 1-10 0z\"/><path d=\"M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4M12 14v4M8 21h8M9.5 18h5\"/>", "seed": "<path d=\"M12 21v-8\"/><path d=\"M12 13c0-4 3-6 7-6 0 4-3 6-7 6zM12 15c0-3-2.5-5-6-5 0 3 2.5 5 6 5z\"/><path d=\"M5 21h14\"/>", "firstaid": "<rect x=\"3\" y=\"7\" width=\"18\" height=\"13\" rx=\"2\"/><path d=\"M9 7V4.5h6V7M12 10.5v6M9 13.5h6\"/>", "ambulance": "<path d=\"M2 16V8a1 1 0 0 1 1-1h11v9\"/><path d=\"M14 10h4l3.5 3.5V16H14\"/><circle cx=\"6.5\" cy=\"17.5\" r=\"2\"/><circle cx=\"17.5\" cy=\"17.5\" r=\"2\"/><path d=\"M8 9.5v4M6 11.5h4\"/>", "injured": "<circle cx=\"12\" cy=\"5\" r=\"2.5\"/><path d=\"M12 8v6M8 10.5h8M12 14l-3 7M12 14l3 7\"/><path d=\"M15.5 4h4M17.5 2v4\"/>", "calm": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M7.5 10.5c.6-.6 1.9-.6 2.5 0M14 10.5c.6-.6 1.9-.6 2.5 0M9 15c1.6 1.2 4.4 1.2 6 0\"/>", "cut": "<path d=\"M4 20l9.5-9.5\"/><path d=\"M13.5 10.5 19 5a1.5 1.5 0 0 1 2 2l-5.5 5.5z\"/><path d=\"M6 13c.8 1 .8 2 0 3M9 15.5c.8 1 .8 2 0 3\"/>", "choke": "<circle cx=\"12\" cy=\"7\" r=\"4\"/><path d=\"M8 13l-2 3 3 1M16 13l2 3-3 1\"/><path d=\"M9.5 13.5h5M6 21h12\"/>", "faint": "<circle cx=\"5\" cy=\"17\" r=\"2\"/><path d=\"M7 17h13M3 21h18\"/><path d=\"M14 5l1 1.5M17 4l-.5 2M20 6l-2 .5\"/><circle cx=\"16.5\" cy=\"8.5\" r=\"1\"/>", "dizzy": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M9 9.5c1 0 1 1.5 0 1.5S8 9.5 9.5 9M15 9.5c1 0 1 1.5 0 1.5S14 9.5 15.5 9\"/><path d=\"M9 16c1-.8 2-.8 3 0s2 .8 3 0\"/>", "nausea": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M8.5 10h.01M15.5 10h.01M8 15.5c1-1 1.5-1 2 0s1 1 2 0 1-1 2 0 1 1 2 0\"/>", "nose": "<path d=\"M10 3c0 5-3 8-3 11a3 3 0 0 0 3 3h2\"/><path d=\"M12 17a2 2 0 0 0 4 0\"/><path d=\"M14 21c3-2 5-5 5-9\"/>", "back": "<circle cx=\"12\" cy=\"4.5\" r=\"2.5\"/><path d=\"M7 21V11a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v10\"/><path d=\"M12 9v11M9.5 12l1.5 1.5M14.5 12 13 13.5\"/>", "belly": "<path d=\"M8 3c-1 3-1 5 0 7-2 3-2 7 0 11M16 3c1 3 1 5 0 7 2 3 2 7 0 11\"/><circle cx=\"12\" cy=\"14\" r=\".9\"/><path d=\"M10.5 11.5h3\"/>", "bandageroll": "<circle cx=\"8\" cy=\"12\" r=\"5\"/><circle cx=\"8\" cy=\"12\" r=\"1.5\"/><path d=\"M8 7h12v10H8\"/><path d=\"M14 10v4M12 12h4\"/>", "scissors": "<circle cx=\"6\" cy=\"6\" r=\"3\"/><circle cx=\"6\" cy=\"18\" r=\"3\"/><path d=\"M8.2 8 20 18M8.2 16 20 6\"/>", "sanitizer": "<path d=\"M8 10h8v10a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1z\"/><path d=\"M10 10V7h4v3M12 7V4h4\"/><path d=\"M10.5 15h3M12 13.5v3\"/>", "tap": "<path d=\"M4 9h9a3 3 0 0 1 3 3v2\"/><path d=\"M4 6v6M8 9V6M6 6h4\"/><path d=\"M16 18c0 1-.8 2-1.5 2S13 19 13 18s1.5-2.5 1.5-2.5S16 17 16 18z\"/>"};
+const icon = (k, cls="vic") => ICONS[k] ? `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[k]}</svg>` : "";
+const PIC_SKIP = new Set(["bell","tidy","habit","crowd","drop","snooze","wake"]);
+/* ---------- storage (per viewer, optional) ---------- */
+const KEY='sada:v1';
+let store={}; try{ store=JSON.parse(localStorage.getItem(KEY)||'{}')||{}; }catch(e){ store={}; }
+const save=()=>{ try{ localStorage.setItem(KEY, JSON.stringify(store)); }catch(e){} };
+const epState = id => (store[id] = store[id] || {done:{}, prefs:{}});
+const prefs = () => (store._prefs = store._prefs || {harakat:true, tr:true});
+
+/* ---------- speech ---------- */
+let arVoice=null;
+function pickVoice(){
+  if(!('speechSynthesis' in window)) return;
+  const vs = speechSynthesis.getVoices();
+  arVoice = vs.find(v=>/^ar(-|_|$)/i.test(v.lang)) || null;
+  $('#voiceInfo').hidden = !!arVoice || vs.length===0;
+}
+if('speechSynthesis' in window){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function speak(text, rate=0.85){
+  if(!('speechSynthesis' in window)){ toast('Bu tarayıcı sesli okumayı desteklemiyor.'); return; }
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = arVoice ? arVoice.lang : 'ar-SA'; if(arVoice) u.voice = arVoice; u.rate = rate;
+  speechSynthesis.speak(u);
+}
+const ICON_SPK = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+const ICON_PLAY = '<svg class="icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+const spkBtn = (text, label='Dinle', rate) => `<button class="btn speak" data-say="${esc(text)}"${rate?` data-rate="${rate}"`:''} aria-label="${label}" title="${label}">${ICON_SPK}</button>`;
+document.addEventListener('click', e=>{
+  const b = e.target.closest('[data-say]'); if(!b) return;
+  e.stopPropagation(); speak(b.dataset.say, parseFloat(b.dataset.rate||'0.85'));
+});
+
+let toastT; function toast(m){ const t=$('#toast'); t.textContent=m; t.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>t.hidden=true,2200); }
+
+/* ---------- steps ---------- */
+const STEPS = [
+  {k:'vocab', ph:0, tr:'Kelimeler', d:'Dinlemeden önce bölümün anahtar kelimelerini öğren. Kartlara dokunarak çevir.'},
+  {k:'listen', ph:1, tr:'Dinle', d:(window.SADA_EMBED?'Videoyu burada izle, metin seninle birlikte ilerlesin. Saat etiketine dokununca video o ana gider.':'Videoyu YouTube\'da aç, transkripti burada takip et. Saat etiketine dokununca video o andan başlar.')},
+  {k:'quiz', ph:1, tr:'Anla', d:'Bölümü dinledikten sonra Arapça soruları cevapla. Gerekirse sorunun Türkçesine bakabilir ya da ilgili ana dönüp tekrar dinleyebilirsin.'},
+  {k:'match', ph:1, tr:'Eşleştir', d:'Arapça kelimeyi Türkçe anlamıyla eşleştir.'},
+  {k:'gaps', ph:1, tr:'Boşluk Doldur', d:'Bölümün özet cümlelerindeki boşluğa doğru kelimeyi seç.'},
+  {k:'order', ph:1, tr:'Sırala', d:'Yusuf\'un sabahını doğru sıraya koy. Kartlara sırayla dokun.'},
+  {k:'read', ph:2, tr:'Oku', d:'Bölümdeki kelimelerle yazılmış kısa bir metin. Oku, dinle, soruları cevapla.'},
+  {k:'shadow', ph:2, tr:'Tekrar Et', d:'Cümleyi dinle, ardından yüksek sesle tekrar et. Her cümleyi üç kez söyle.'},
+  {k:'dict', ph:2, tr:'Dikte', d:'Kelimeyi dinle ve yaz. Ekrandaki Arapça klavyeyi ya da kendi klavyeni kullanabilirsin; hareke yazmak isteğe bağlı.'},
+  {k:'mine', ph:2, tr:'Senin Sabahın', d:'Kalıpları kullanarak kendi sabah rutinini Arapça anlat: sana uyan cümleleri seç, sonra paragrafını yüksek sesle oku.', dAr:'اِخْتَرِ الْجُمَلَ الَّتِي تُنَاسِبُكَ، ثُمَّ اقْرَأْ فِقْرَتَكَ بِصَوْتٍ عَالٍ.'}
+];
+
+const PHASES = ['Hazırlan','Dinle ve Anla','Kullan'];
+const QSTEPS = [
+  {k:'vocab', tr:'Kelimeler', d:'Bu bölümün en temel 8 kelimesi. Kartlara dokunarak çevir.'},
+  {k:'listen', tr:'Dinle', d:(window.SADA_EMBED?'Bölümün özet kısmını dinle (yaklaşık 1–2 dakika). Video bu kısımdan başlar; metni burada takip et.':'Bölümün özet kısmını dinle (yaklaşık 1 dakika). Videoyu bu kısımdan aç, metni burada takip et.')},
+  {k:'quiz', tr:'Anla', d:'Özetle ilgili 3 soruyu cevapla.'},
+  {k:'shadow', tr:'Tekrar Et', d:'3 cümleyi dinle ve her birini yüksek sesle üç kez tekrar et.'},
+  {k:'mine', tr:'Senin Sabahın', d:'Üç kısa soruyla kendi sabahını Arapça anlat, sonra paragrafını yüksek sesle oku.', dAr:'اِخْتَرِ الْجُمَلَ الَّتِي تُنَاسِبُكَ، ثُمَّ اقْرَأْ فِقْرَتَكَ بِصَوْتٍ عَالٍ.'}
+];
+const PATHS = { quick:{ico:'⚡', tr:'Hızlı çalışma', time:'≈ 10–15 dk'}, full:{ico:'📚', tr:'Tam çalışma', time:'≈ 45–60 dk'} };
+const LS = () => (pathOf(cur.ep.id)==='quick'?QSTEPS:STEPS).map(s=>Object.assign({}, s, ((cur.ep.ui||{})[s.k])||{}));
+const pathOf = id => (store[id]||{}).path || null;
+const stepsFor = id => pathOf(id)==='quick' ? QSTEPS : STEPS;
+const doneFor = (id, path) => { const s=epState(id); if((path||pathOf(id))==='quick'){ s.qdone=s.qdone||{}; return s.qdone; } return s.done; };
+function viewEp(ep){
+  if(pathOf(ep.id)!=='quick' || !ep.quick) return ep;
+  const q=ep.quick, sums=ep.segments.filter(s=>s.sum);
+  return Object.assign({}, ep, {
+    vocab: q.vocab.map(w=>typeof w==='number'?ep.vocab[w]:ep.vocab.find(v=>v.ar===w)).filter(Boolean),
+    segments: ep.segments.filter(sg=>sg.t>=q.listen[0] && sg.t<q.listen[1]),
+    questions: q.questions,
+    frames: ep.frames.filter(f=>q.frames.includes(f.key)),
+    shadowItems: q.shadow.map(i=>sums[i]),
+    listenStart: q.listen[0], isQuick: true });
+}
+let cur = { ep:null, step:0 };
+function markDone(k){ const d=doneFor(cur.ep.id); if(!d[k]){ d[k]=true; save(); renderSteps(); toast('Adım tamamlandı ✓'); } }
+const progress = (ep, path='full') => { const st=store[ep.id]||{}; const d=(path==='quick'?st.qdone:st.done)||{}; const L=path==='quick'?QSTEPS:STEPS; return Math.round(L.filter(s=>d[s.k]).length/L.length*100); };
+
+/* ---------- home ---------- */
+let levelFilter = 'all', query = '';
+const fold = s => norm(String(s).toLocaleLowerCase('tr'));
+function matches(ep){
+  if(!query.trim()) return true;
+  const hay = [ep.titleTr, ep.titleAr, ep.topic, ep.summaryTr, ...(ep.keywords||[]), ...ep.vocab.map(v=>v.ar+' '+v.tr)].map(fold).join(' ');
+  return query.trim().split(/\s+/).every(w=>hay.includes(fold(w)));
+}
+function gridHTML(){
+  const list = EPS.filter(e=>(levelFilter==='all'||e.level===levelFilter) && matches(e));
+  return list.map(ep=>{const p=progress(ep), pq=progress(ep,'quick');return `
+      <article class="card ep-card" tabindex="0" role="button" data-ep="${ep.id}" aria-label="${esc(ep.titleTr)} bölümünü aç">
+        ${ep.cover?`<img class="cover" src="${ep.cover}" alt="">`:''}
+        <div class="meta"><span class="pill">${ep.level.replace('-','–')}</span><span class="pill plain">${ep.duration}</span></div>
+        <div class="ar">${esc(ep.titleAr)}</div>
+        <h3>${esc(ep.titleTr)}</h3>
+        <p class="muted" style="margin:0;font-size:.92rem">${esc(ep.summaryTr)}</p>
+        <div class="tags">${(ep.keywords||[]).filter(k=>!/[\u0600-\u06FF]/.test(k)).slice(0,5).map(k=>`<button class="tag" data-kw="${esc(k)}">#${esc(k)}</button>`).join('')}</div>
+        <div class="prog">
+          ${pq||p ? `
+          ${pq?`<div class="prow"><span>⚡ Hızlı</span><div class="bar"><span style="width:${pq}%"></span></div><b>${pq===100?'✓':'%'+pq}</b></div>`:''}
+          ${p?`<div class="prow"><span>📚 Tam</span><div class="bar"><span style="width:${p}%"></span></div><b>${p===100?'✓':'%'+p}</b></div>`:''}`
+          : '<div class="muted" style="font-size:.8rem">Henüz başlamadın · Hızlı (10–15 dk) ya da tam çalışma</div>'}
+        </div>
+      </article>`}).join('')
+    + (list.length ? `<div class="card soon"><b>Yeni bölümler yolda</b><span>Her yeni podcast aynı on adımla buraya eklenecek.</span></div>`
+       : `<div class="card soon"><b>Sonuç bulunamadı.</b><span>${query.trim()?'Başka bir kelime dene ya da aramayı temizle.':'B1–B2 bölümleri eklendiğinde burada görünecek.'}</span></div>`);
+}
+function bindGrid(){
+  app.querySelectorAll('[data-kw]').forEach(b=>b.onclick=e=>{ e.stopPropagation(); query=b.dataset.kw; $('#search').value=query; refreshGrid(); });
+  app.querySelectorAll('[data-ep]').forEach(c=>{
+    const go=()=>openEp(c.dataset.ep);
+    c.onclick=go; c.onkeydown=e=>{ if(e.target===c&&(e.key==='Enter'||e.key===' ')){e.preventDefault();go();} };
+  });
+}
+function refreshGrid(){ $('#grid').innerHTML = gridHTML(); bindGrid(); }
+function renderHome(){
+  cur.ep=null;
+  try{ history.replaceState(null,'',location.pathname); }catch(e){}
+  const bars = [14,26,38,22,34,18,30,40,24,16,32,20].map(h=>`<i style="height:${h}px;animation-delay:${(h%7)/10}s"></i>`).join('');
+  app.innerHTML = `
+  <section class="wrap hero">
+    <div class="wave" aria-hidden="true">${bars}</div>
+    <h1>Arapçayı gerçek podcastlerle dinle, anla, tekrar et.</h1>
+    <p>Her bölüm on adımlık bir yol: önce kelimeler, sonra dinleme ve anlama, en sonunda kendi cümlelerin. İlerlemen bu cihazda saklanır.</p>
+  </section>
+  <section class="wrap">
+    <div class="eyebrow">Bölümler</div>
+    <div class="searchrow">
+      <input type="search" id="search" placeholder="Konu ya da kelime ara: kahvaltı, ulaşım, مطبخ…" value="${esc(query)}" aria-label="Bölümlerde ara">
+    </div>
+    <div class="filters" role="group" aria-label="Seviye">
+      ${[['all','Tümü'],['A1-A2','A1–A2'],['A2-B1','A2–B1'],['B1-B2','B1–B2']].map(([v,l])=>`<button class="chip" data-lv="${v}" aria-pressed="${levelFilter===v}">${l}</button>`).join('')}
+    </div>
+    <div class="grid" id="grid">${gridHTML()}</div>
+  </section>`;
+  app.querySelectorAll('[data-lv]').forEach(b=>b.onclick=()=>{levelFilter=b.dataset.lv; app.querySelectorAll('[data-lv]').forEach(x=>x.setAttribute('aria-pressed', x===b)); refreshGrid();});
+  $('#search').oninput=e=>{ query=e.target.value; refreshGrid(); };
+  bindGrid();
+  window.scrollTo(0,0);
+}
+
+
+/* ---------- episode ---------- */
+function openEp(id, step){
+  const ep = EPS.find(e=>e.id===id); if(!ep) return renderHome();
+  cur.ep=ep; const st0=epState(id); cur.step = step ?? ((pathOf(id)==='quick'?st0.qlast:st0.last) ?? 0);
+  if(cur.step >= stepsFor(id).length) cur.step = 0;
+  try{ history.replaceState(null,'','#'+id); }catch(e){}
+  app.innerHTML = `
+  <section class="wrap ep-head">
+    <button class="btn ghost sm" id="back" style="justify-self:start">← Tüm bölümler</button>
+    <div class="meta"><span class="pill">${ep.level.replace('-','–')}</span><span class="pill plain">${esc(ep.variety)}</span><span class="pill plain">${ep.duration}</span><span class="pill plain">${esc(ep.topic)}</span></div>
+    ${ep.cover?`<div class="hero-cover"><img src="${ep.cover}" alt="${esc(ep.coverAlt||'Bölüm kapağı')}"><div class="ov"><div class="ar-title">${esc(ep.titleAr)}</div><h1>${esc(ep.titleTr)}</h1></div></div>`
+      :`<div class="ar-title">${esc(ep.titleAr)}</div><h1 style="font-size:1.6rem">${esc(ep.titleTr)}</h1>`}
+    <p class="muted" style="margin:0;max-width:62ch">${esc(ep.summaryTr)}</p>
+    <div class="actions"><a class="btn primary" href="${yt(ep)}" target="_blank" rel="noopener">${ICON_PLAY} YouTube'da izle</a><span id="pathTag"></span></div>
+  </section>
+  <nav class="steps" aria-label="Adımlar"><div class="wrap" id="stepbar"></div></nav>
+  <section class="wrap panel" id="panel"></section>`;
+  $('#back').onclick=renderHome;
+  if(!pathOf(id) && ep.quick) renderChooser(); else { renderPathTag(); renderSteps(); renderStep(); }
+  window.scrollTo(0,0);
+}
+function renderPathTag(){
+  const t=$('#pathTag'); if(!t) return; const P=PATHS[pathOf(cur.ep.id)||'full'];
+  t.innerHTML = cur.ep.quick ? `<span class="pathtag">${P.ico} ${P.tr} <span class="muted">${P.time}</span></span><button class="btn sm ghost" id="chg">Yolu değiştir</button>` : '';
+  const c=$('#chg'); if(c) c.onclick=renderChooser;
+}
+function renderChooser(){
+  const ep=cur.ep, cp=pathOf(ep.id), q=ep.quick;
+  $('#stepbar').innerHTML=''; $('#pathTag').innerHTML='';
+  const pq=progress(ep,'quick'), pf=progress(ep);
+  $('#panel').innerHTML = `<div class="panel-head"><div class="eyebrow">Başlamadan önce</div><h2>Nasıl çalışmak istersin?</h2><p>İstediğin zaman yolu değiştirebilirsin. İki yolun ilerlemesi ayrı tutulur.</p></div>
+    <div class="paths">
+      <button class="pathcard${cp==='quick'?' cur':''}" data-path="quick">
+        <div class="pc-h"><span class="pc-i">⚡</span><div><b>Hızlı çalışma</b><div class="muted">≈ 10–15 dakika · 5 adım</div></div></div>
+        <ul><li>${q.vocab.length} temel kelime</li><li>Bölümün özeti (${mmss(q.listen[0])}–${mmss(q.listen[1])})</li><li>${q.questions.length} anlama sorusu</li><li>${q.shadow.length} tekrar cümlesi</li><li>Kısa kişisel cevap</li></ul>
+        <div class="pc-f">${pq?`İlerleme: ${pq===100?'tamamlandı ✓':'%'+pq}`:'Bugün az vaktim var'}</div>
+      </button>
+      <button class="pathcard${cp==='full'?' cur':''}" data-path="full">
+        <div class="pc-h"><span class="pc-i">📚</span><div><b>Tam çalışma</b><div class="muted">≈ 45–60 dakika · 10 adım</div></div></div>
+        <ul><li>${ep.vocab.length} kelime, 3 kart yönü</li><li>Bölümün tamamı (${ep.duration})</li><li>${ep.questions.length} anlama sorusu, eşleştirme, boşluk, sıralama</li><li>Okuma, tekrar, dikte</li><li>Kalıp kutusu ve kişisel paragraf</li></ul>
+        <div class="pc-f">${pf?`İlerleme: ${pf===100?'tamamlandı ✓':'%'+pf}`:'Bölümü derinlemesine çalışmak istiyorum'}</div>
+      </button>
+    </div>`;
+  $('#panel').querySelectorAll('[data-path]').forEach(b=>b.onclick=()=>{ const st=epState(ep.id); st.path=b.dataset.path; save(); cur.step=(st.path==='quick'?st.qlast:st.last)||0; if(cur.step>=stepsFor(ep.id).length) cur.step=0; renderPathTag(); renderSteps(); renderStep(); window.scrollTo({top:$('#panel').offsetTop-140}); });
+}
+function renderSteps(){
+  const bar=$('#stepbar'); if(!bar) return; const d=doneFor(cur.ep.id);
+  if(pathOf(cur.ep.id)==='quick'){
+    bar.innerHTML = `<div class="phase on"><div class="ph-l"><b>⚡</b> Hızlı çalışma <span class="ph-c">${QSTEPS.filter(s=>d[s.k]).length}/${QSTEPS.length}</span></div><div class="ph-s">${LS().map((s,i)=>`<button class="step${d[s.k]?' done':''}" data-i="${i}" ${i===cur.step?'aria-current="step"':''}><span class="n">${d[s.k]?'✓':i+1}</span>${s.tr}</button>`).join('')}</div></div>`;
+    bar.querySelectorAll('.step').forEach(b=>b.onclick=()=>{cur.step=+b.dataset.i;renderStep();});
+    return;
+  }
+  bar.innerHTML = PHASES.map((ph,pi)=>{ const ss=LS().map((s,i)=>[s,i]).filter(([s])=>s.ph===pi); const dn=ss.filter(([s])=>d[s.k]).length;
+    return `<div class="phase${STEPS[cur.step].ph===pi?' on':''}"><div class="ph-l"><b>${pi+1}</b> ${ph} <span class="ph-c">${dn}/${ss.length}</span></div><div class="ph-s">${
+      ss.map(([s,i])=>`<button class="step${d[s.k]?' done':''}" data-i="${i}" ${i===cur.step?'aria-current="step"':''}><span class="n">${d[s.k]?'✓':i+1}</span>${s.tr}</button>`).join('')}</div></div>`; }).join('');
+  bar.querySelectorAll('.step').forEach(b=>b.onclick=()=>{cur.step=+b.dataset.i;renderStep();});
+  const ph=bar.querySelector('.phase.on'), a=bar.querySelector('[aria-current]');
+  if(ph) bar.scrollLeft = ph.offsetLeft - bar.offsetLeft - 8;
+  if(a){ const r=a.getBoundingClientRect(), br=bar.getBoundingClientRect(); if(r.right>br.right-8) bar.scrollLeft += r.right-br.right+16; }
+}
+function goStep(i){ cur.step=i; renderStep(); const p=$('#panel'); window.scrollTo({top:p.offsetTop-120}); }
+function renderStep(){
+  const Q = pathOf(cur.ep.id)==='quick', L = LS();
+  const s=L[cur.step], st=epState(cur.ep.id); if(Q) st.qlast=cur.step; else st.last=cur.step; save();
+  renderSteps();
+  const p=$('#panel');
+  p.innerHTML = `<div class="panel-head"><div class="eyebrow">${Q?'⚡ Hızlı çalışma':`Aşama ${s.ph+1} · ${PHASES[s.ph]}`} — Adım ${cur.step+1} / ${L.length}</div><h2>${s.tr}</h2><p>${s.d}</p>${s.dAr?`<p class="ar" style="color:var(--ink);font-size:1.2rem;max-width:none">${s.dAr}</p>`:''}</div><div id="body" style="display:grid;gap:16px"></div>
+  <div class="foot">
+    <button class="btn" id="prev" ${cur.step===0?'disabled':''}>← Önceki</button>
+    ${cur.step<L.length-1?`<button class="btn primary" id="next">Sonraki adım: ${L[cur.step+1].tr} →</button>`:`<button class="btn primary" id="next">Bölümü bitir</button>`}
+  </div>`;
+  $('#prev').onclick=()=>goStep(cur.step-1);
+  $('#next').onclick=()=>{ if(cur.step<L.length-1) goStep(cur.step+1); else renderFinish(); };
+  VIEWS[s.k]($('#body'), viewEp(cur.ep));
+}
+function renderFinish(){
+  const Q = pathOf(cur.ep.id)==='quick', L=LS(), d=doneFor(cur.ep.id);
+  const left = L.filter(s=>!d[s.k]);
+  if(!left.length || left.every(s=>s.k==='mine')) markDone('mine');
+  const rest = L.filter(s=>!d[s.k]);
+  $('#stepbar').querySelectorAll('.step').forEach(b=>b.removeAttribute('aria-current'));
+  $('#panel').innerHTML = `<div class="finish">
+    <div class="fin-i" aria-hidden="true">${Q?'⚡':'🎉'}</div>
+    <h2>${rest.length?'Bölümün sonuna geldin':'Tebrikler!'}</h2>
+    <p>${rest.length?`Henüz tamamlanmamış adımlar: ${rest.map(s=>s.tr).join(', ')}. İstersen geri dönüp bitirebilirsin.`:(Q?'Bu bölümün hızlı çalışmasını bitirdin. Kısa ama düzenli çalışmak çok işe yarar.':'Bu bölümün tam çalışmasını bitirdin. Harika bir iş çıkardın!')}</p>
+    ${Q&&!rest.length?'<p class="muted">Vaktin olduğunda tam çalışmayla devam edebilirsin: daha çok kelime, bölümün tamamı, okuma ve dikte seni bekliyor.</p>':''}
+    <div class="toolbar" style="justify-content:center">
+      ${Q?'<button class="btn primary" id="toFull">📚 Tam çalışmaya geç</button>':''}
+      <button class="btn" id="toHome">Tüm bölümler</button>
+    </div></div>`;
+  const tf=$('#toFull'); if(tf) tf.onclick=()=>{ const st=epState(cur.ep.id); st.path='full'; save(); cur.step=st.last||0; renderPathTag(); renderSteps(); renderStep(); };
+  $('#toHome').onclick=renderHome;
+}
+
+/* ---------- views ---------- */
+const VIEWS = {};
+
+VIEWS.vocab = (el, ep) => {
+  const P = prefs(); if(!P.card) P.card='ar';
+  const groups = [...new Set(ep.vocab.map(v=>v.g))];
+  let g = groups[0]; const open = new Set(); const seen = new Set();
+  const MODES = [['ar','Arapça → Türkçe','Tanı'],['audio','Sesten tanı','Kulakla'],['tr','Türkçe → Arapça','Hatırla']];
+  const TIPS = {
+    ar: 'Arapça kelimeyi oku, anlamını tahmin et, sonra kartı çevir.',
+    audio: 'Kartta yazı yok. ▶ düğmesine bas, kelimeyi dinle ve anlamını tahmin et. Sonra kartı çevir.',
+    tr: 'Türkçe anlama bak ve Arapçasını söylemeye çalış. Sonra kartı çevirip kontrol et.'
+  };
+  const draw = () => {
+    const M = P.card;
+    const items = ep.vocab.filter(v=>v.g===g);
+    const front = v => M==='audio'
+      ? `<button class="btn primary playbig" data-say="${esc(v.ar)}" aria-label="Kelimeyi dinle">${ICON_SPK}</button><div class="muted" style="font-size:.85rem">Dinle ve tahmin et</div>`
+      : M==='tr'
+      ? `${icon(v.ic)}<div class="trfront">${esc(v.tr)}</div>`
+      : `${icon(v.ic)}<div class="big">${esc(v.ar)}</div>`;
+    el.innerHTML = `
+      <div class="toolbar">
+        <div class="seg" role="radiogroup" aria-label="Kart yönü">${MODES.map(([k,l,n])=>`<button role="radio" aria-checked="${M===k}" data-m="${k}"><span>${l}</span><small>${n}</small></button>`).join('')}</div>
+      </div>
+      <div class="note">${TIPS[M]}${M==='audio'&&!arVoice?' <b>Not:</b> Bu cihazda Arapça ses bulunamadı; bu mod için Arapça sesi olan bir tarayıcı ya da cihaz gerekebilir.':''}</div>
+      <div class="tabs" role="group" aria-label="Tema">${groups.map(x=>`<button class="chip" data-g="${x}" aria-pressed="${x===g}">${x} <span class="muted">${ep.vocab.filter(v=>v.g===x).length}</span></button>`).join('')}</div>
+      <div class="vgrid">${items.map(v=>{const i=ep.vocab.indexOf(v), o=open.has(i);return `
+        <div class="flip${seen.has(i)?' seen':''}" data-i="${i}" tabindex="0" role="button" aria-label="Kartı çevir">
+          <div class="front" ${o?'hidden':''}>${front(v)}</div>
+          <div class="back" ${o?'':'hidden'}>
+            <div class="big" style="font-size:calc(1.5rem * var(--ars,1))">${esc(v.ar)}</div>${icon(v.ic,'vic sm')}
+            <div class="tr">${esc(v.tr)}</div>
+            <div class="root">الجذر: ${esc(v.root)}</div>
+            <div class="ar ex">${esc(v.ex)}</div>
+            ${v.tk?`<div class="row"><span class="pill gold">Türkçede: ${esc(v.tk)}</span></div>`:''}
+          </div>
+          ${o ? `<div class="row">${spkBtn(v.ar,'Kelimeyi dinle')}${spkBtn(v.ex,'Örnek cümleyi dinle')}</div>`
+              : M==='ar' ? `<div class="row">${spkBtn(v.ar,'Kelimeyi dinle')}</div>` : '<div class="row"><span class="muted" style="font-size:.8rem">Çevirmek için dokun</span></div>'}
+        </div>`}).join('')}</div>
+      <p class="muted" style="margin:0;font-size:.9rem">${seen.size} / ${ep.vocab.length} kart çevrildi · <span class="pill gold" style="font-size:.75rem">Türkçede</span> etiketi aynı kökten gelen Türkçe kelimeyi gösterir.</p>`;
+    el.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{ P.card=b.dataset.m; save(); open.clear(); draw(); });
+    el.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{g=b.dataset.g;draw();});
+    el.querySelectorAll('.flip').forEach(c=>{
+      const flip=()=>{ const i=+c.dataset.i; if(open.has(i)) open.delete(i); else { open.add(i); seen.add(i); } draw(); if(seen.size===ep.vocab.length) markDone('vocab'); };
+      c.onclick=e=>{ if(e.target.closest('[data-say]')) return; flip(); }; c.onkeydown=e=>{ if(e.target===c&&(e.key==='Enter'||e.key===' ')){e.preventDefault();flip();} };
+    });
+  };
+  draw();
+};
+
+let YTP=null, ytTimer=null;
+function ytApi(){ return new Promise(r=>{ if(window.YT&&YT.Player) return r(); const prev=window.onYouTubeIframeAPIReady; window.onYouTubeIframeAPIReady=()=>{ if(prev) prev(); r(); }; if(!document.getElementById('ytapi')){ const s=document.createElement('script'); s.id='ytapi'; s.src='https://www.youtube.com/iframe_api'; document.head.appendChild(s); } }); }
+function ytMount(ep, start, root){
+  clearInterval(ytTimer); YTP=null;
+  const sb=document.querySelector('.steps'), top=document.querySelector('.top'), box=root.querySelector('.ytbox');
+  if(box) box.style.top=((top?top.offsetHeight:0)+(sb?sb.offsetHeight:0)-2)+'px';
+  ytApi().then(()=>{
+    if(!root.isConnected || !document.getElementById('ytp')) return;
+    YTP=new YT.Player('ytp',{videoId:ep.youtubeId,width:'100%',height:'100%',playerVars:{start:Math.floor(start||0),rel:0,playsinline:1,modestbranding:1}});
+    let last=-1;
+    ytTimer=setInterval(()=>{
+      if(!root.isConnected){ clearInterval(ytTimer); YTP=null; return; }
+      if(!YTP||!YTP.getCurrentTime) return;
+      const t=YTP.getCurrentTime(); const lines=[...root.querySelectorAll('.line[data-t]')];
+      let idx=-1; for(let i=0;i<lines.length;i++){ if(+lines[i].dataset.t<=t+0.3) idx=i; else break; }
+      if(idx<0 || lines[idx].classList.contains('now')){ if(idx!==last) last=idx; return; }
+      lines.forEach(l=>l.classList.remove('now')); lines[idx].classList.add('now');
+      const f=root.querySelector('#ytFollow'), playing=YTP.getPlayerState&&YTP.getPlayerState()===1;
+      if(idx!==last && f && f.checked && playing){ const r=lines[idx].getBoundingClientRect(), b=root.querySelector('.ytbox').getBoundingClientRect(); if(r.top<b.bottom+4 || r.bottom>innerHeight-8) window.scrollBy({top:r.top-b.bottom-16,behavior:'smooth'}); }
+      last=idx;
+    },400);
+  });
+}
+function ytSeek(t){ if(YTP&&YTP.seekTo){ YTP.seekTo(t,true); if(YTP.playVideo) YTP.playVideo(); return true; } return false; }
+
+VIEWS.listen = (el, ep) => {
+  const P = prefs();
+  const EMB = !!window.SADA_EMBED;
+  let host = el;
+  if(EMB){
+    el.innerHTML = `<div class="ytbox"><div class="frame"><div id="ytp"></div></div><div class="ytbar"><label><input type="checkbox" id="ytFollow" checked> Metni videoyla takip et</label><a href="${yt(ep)}" target="_blank" rel="noopener">Videonun kaynağı: YouTube ↗</a></div></div><div id="lv"></div>`;
+    host = el.querySelector('#lv');
+    ytMount(ep, ep.listenStart||0, el);
+  }
+  if(!P.view) P.view = P.tr===false ? 'ar' : 'artr';
+  const MODES = [['listen','Sadece dinle','1. dinleme'],['ar','Arapça','2. dinleme'],['artr','Arapça + Türkçe','3. dinleme']];
+  const draw = () => {
+    const V = P.view;
+    const tip = {
+      listen: 'Metin gizli. Videoyu aç ve sadece dinle: Kim konuşuyor? Konu ne? Tanıdığın kelimeler hangileri? Saat etiketleri hangi kısımda olduğunu gösterir.',
+      ar: 'Şimdi Arapça metinle birlikte dinle. Metni istersen harekeli, istersen harekesiz takip edebilirsin; "Harekeler" düğmesiyle değiştir.',
+      artr: 'Anlamadığın yerleri Türkçe çeviriyle kontrol et. Sonra çeviriyi kapatıp bir kez daha dinlemeyi dene.'
+    }[V];
+    host.innerHTML = `
+      <div class="toolbar">
+        ${EMB?(ep.isQuick?`<button class="btn primary" data-seek="${ep.listenStart}">${ICON_PLAY} ${mmss(ep.listenStart)}'den başlat</button>`:''):`<a class="btn primary" href="${yt(ep, ep.listenStart)}" target="_blank" rel="noopener">${ICON_PLAY} ${ep.isQuick?`Videoyu ${mmss(ep.listenStart)}'den aç`:'Videoyu aç'}</a>`}
+        <div class="seg" role="radiogroup" aria-label="Görünüm">${MODES.map(([k,l,n])=>`<button role="radio" aria-checked="${V===k}" data-v="${k}"><span>${l}</span><small>${n}</small></button>`).join('')}</div>
+        ${V!=='listen'?`<button class="toggle" id="tH" aria-pressed="${P.harakat}">Harekeler</button>`:''}
+      </div>
+      <div class="note">${tip}</div>
+      <div class="lines${V==='listen'?' hidden-text':''}">${ep.segments.map(sg=>`
+        <div class="line${sg.sum?' sum':''}" data-t="${sg.t}">
+          <a class="ts" href="${yt(ep,sg.t)}" target="_blank" rel="noopener" data-seek="${sg.t}" title="${EMB?'Videoyu bu ana getir':'Videoyu bu andan aç'}">${mmss(sg.t)}</a>
+          <div class="body">
+            <div class="who ${sg.s}">${esc(ep.speakers[sg.s].tr)}${sg.sum?' · özet':''}</div>
+            ${V==='listen'
+              ? `<div class="veil" aria-hidden="true">${'<i></i>'.repeat(Math.min(9, Math.max(2, Math.round(strip(sg.ar).split(/\s+/).length/3))))}</div>`
+              : `<div class="ar">${esc(P.harakat?sg.ar:strip(sg.ar))}</div>${V==='artr'?`<div class="tr">${esc(sg.tr)}</div>`:''}`}
+          </div>
+          ${V==='listen'?'':spkBtn(sg.ar,'Cümleyi sesli oku')}
+        </div>`).join('')}</div>
+      <div class="toolbar">
+        ${V==='listen'?'<button class="btn primary" data-go="ar">Metinle dinlemeye geç →</button>':V==='ar'?'<button class="btn" data-go="artr">Türkçeyi de göster</button>':''}
+        <button class="btn" id="lDone">Bölümü dinledim ✓</button>
+      </div>`;
+    host.querySelectorAll('[data-v],[data-go]').forEach(b=>b.onclick=()=>{ P.view=b.dataset.v||b.dataset.go; save(); draw(); if(b.dataset.go) host.scrollIntoView({block:'start'}); });
+    if(EMB) host.querySelectorAll('[data-seek]').forEach(b=>b.onclick=e=>{ if(ytSeek(+b.dataset.seek)) e.preventDefault(); });
+    const th=$('#tH',host); if(th) th.onclick=()=>{P.harakat=!P.harakat;save();draw();};
+    $('#lDone',host).onclick=()=>markDone('listen');
+  };
+  draw();
+};
+
+function quiz(el, ep, qs, doneKey, withTime){
+  const ans = new Array(qs.length).fill(null); const showTr = new Set();
+  const draw = () => {
+    const n = ans.filter(a=>a!==null).length, right = ans.filter((a,i)=>a!==null && a===qs[i].a).length;
+    el.innerHTML = qs.map((q,i)=>{
+      const AR = q.lang==='ar';
+      const opts = q.type==='tf' ? (AR?[['صَحِيحٌ',true],['خَطَأٌ',false]]:[['Doğru',true],['Yanlış',false]]) : q.opts.map((o,j)=>[o,j]);
+      const a = ans[i];
+      return `<div class="q${AR?' q-ar':''}">
+        ${AR?`<div class="qrow"><span class="qn">${i+1}</span><div class="qt ar">${esc(q.q)}</div>${spkBtn(q.q,'Soruyu dinle')}</div>
+          <div><button class="btn sm ghost" data-trq="${i}">${showTr.has(i)?'Türkçesini gizle':'Türkçesini göster'}</button>${showTr.has(i)?` <span class="muted" style="font-size:.9rem">${esc(q.qTr)}</span>`:''}</div>`
+          :`<div class="qt">${i+1}. ${esc(q.q)}</div>`}
+        <div class="opts"${AR?' style="direction:rtl"':''}>${opts.map(([l,v])=>{
+          let c=''; if(a!==null){ if(v===q.a) c=' right'; else if(v===a) c=' wrong'; }
+          return `<button class="opt${AR?' ar-opt':''}${c}" data-q="${i}" data-v="${v}" ${a!==null?'disabled':''}>${esc(l)}</button>`;}).join('')}</div>
+        ${a!==null?`<div class="fb ${a===q.a?'ok':'no'}">${a===q.a?'Doğru!':'Doğru cevap işaretlendi.'}${withTime&&q.t!=null?` <a href="${yt(ep,q.t)}" target="_blank" rel="noopener">${mmss(q.t)} anını tekrar dinle</a>`:''}</div>`:''}
+      </div>`;}).join('') +
+      (n===qs.length?`<div class="score"><b>${right}/${qs.length}</b><div><div style="font-weight:600">${right===qs.length?'Mükemmel!':right>=qs.length*0.7?'Çok iyi!':'Bir kez daha dinlemeye ne dersin?'}</div><button class="btn sm" id="again" style="margin-top:6px">Tekrar dene</button></div></div>`:'');
+    el.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
+      const i=+b.dataset.q, raw=b.dataset.v; ans[i] = raw==='true'?true:raw==='false'?false:+raw; draw();
+      if(ans.every(a=>a!==null)) markDone(doneKey);
+    });
+    el.querySelectorAll('[data-trq]').forEach(b=>b.onclick=()=>{const i=+b.dataset.trq; showTr.has(i)?showTr.delete(i):showTr.add(i); draw();});
+    const ag=$('#again',el); if(ag) ag.onclick=()=>{ans.fill(null);draw();};
+  };
+  draw();
+}
+VIEWS.quiz = (el, ep) => quiz(el, ep, ep.questions, 'quiz', true);
+
+VIEWS.match = (el, ep) => {
+  const mode = el.dataset.mode || 'tr';
+  const src = mode==='pic' ? ep.vocab.filter(v=>v.ic && !v.nopic && !PIC_SKIP.has(v.ic)) : ep.vocab;
+  const rounds = []; const pool = shuffle(src); for(let i=0;i<pool.length;i+=6) rounds.push(pool.slice(i,i+6));
+  if(rounds.length>1 && rounds[rounds.length-1].length<4) rounds[rounds.length-2].push(...rounds.pop());
+  let r=0, sel=null, gone=new Set(), miss=0;
+  const draw = () => {
+    const set = rounds[r]; const L = set.map((v,i)=>i), R = shuffle(L);
+    el.innerHTML = `<div class="toolbar"><div class="tabs" role="group" aria-label="Eşleştirme türü"><button class="chip" data-mode="tr" aria-pressed="${mode==='tr'}">Kelime ↔ Türkçe</button><button class="chip" data-mode="pic" aria-pressed="${mode==='pic'}">Kelime ↔ Resim</button></div><span class="pill">Tur ${r+1} / ${rounds.length}</span><span class="pill plain" id="miss">Hata: ${miss}</span></div>
+      <div class="match">
+        <div class="mcol">${L.map(i=>`<button class="tile arw${gone.has(i)?' gone':''}" data-side="a" data-i="${i}" ${gone.has(i)?'disabled':''}>${esc(set[i].ar)}</button>`).join('')}</div>
+        <div class="mcol">${R.map(i=>`<button class="tile${gone.has(i)?' gone':''}" data-side="t" data-i="${i}" ${gone.has(i)?'disabled':''} ${mode==='pic'?`aria-label="Resim ${i+1}"`:''}>${mode==='pic'?icon(set[i].ic):esc(set[i].tr)}</button>`).join('')}</div>
+      </div>`;
+    el.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{ el.dataset.mode=b.dataset.mode; VIEWS.match(el,ep); });
+    el.querySelectorAll('.tile').forEach(b=>b.onclick=()=>{
+      if(!sel || sel.dataset.side===b.dataset.side){ el.querySelectorAll('.tile.sel').forEach(x=>x.classList.remove('sel')); sel=b; b.classList.add('sel'); if(b.dataset.side==='a') speak(set[+b.dataset.i].ar); return; }
+      if(sel.dataset.i===b.dataset.i){
+        const i=+b.dataset.i; gone.add(i); sel=null;
+        el.querySelectorAll(`.tile[data-i="${i}"]`).forEach(x=>{x.classList.remove('sel');x.classList.add('gone');x.disabled=true;});
+        if(gone.size===set.length){
+          if(r<rounds.length-1){ setTimeout(()=>{r++;gone=new Set();draw();},500); }
+          else { markDone('match'); el.insertAdjacentHTML('beforeend',`<div class="score"><b>✓</b><div><div style="font-weight:600">Tüm kelimeleri eşleştirdin. Toplam hata: ${miss}</div><button class="btn sm" id="again" style="margin-top:6px">Yeniden oyna</button></div></div>`); $('#again',el).onclick=()=>VIEWS.match(el,ep); }
+        }
+      } else {
+        miss++; const a=sel, c=b; a.classList.add('shake'); c.classList.add('shake'); sel=null;
+        el.querySelector('#miss').textContent='Hata: '+miss;
+        setTimeout(()=>{a.classList.remove('shake','sel');c.classList.remove('shake');},400);
+      }
+    });
+  };
+  draw();
+};
+
+VIEWS.gaps = (el, ep) => {
+  const ans = new Array(ep.gaps.length).fill(null); const order = ep.gaps.map(g=>shuffle(g.opts)); const showTr = new Set();
+  const draw = () => {
+    el.innerHTML = ep.gaps.map((g,i)=>{ const a=ans[i];
+      return `<div class="q"><div class="gap-s">${esc(g.pre)} <span class="blank${a===g.ans?' filled':''}">${a===g.ans?esc(g.ans):'…'}</span> ${esc(g.post)}</div>
+      <div><button class="btn sm ghost" data-trg="${i}">${showTr.has(i)?'Türkçesini gizle':'Türkçesini göster'}</button>${showTr.has(i)?` <span class="muted" style="font-size:.9rem">${esc(g.tr)}</span>`:''}</div>
+      <div class="opts" style="direction:rtl">${order[i].map(o=>`<button class="opt ar-opt${a===g.ans&&o===g.ans?' right':''}${a===o&&o!==g.ans?' wrong':''}" data-i="${i}" data-o="${esc(o)}" ${a===g.ans?'disabled':''}>${esc(o)}</button>`).join('')}</div>
+      </div>`;}).join('');
+    el.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
+      const i=+b.dataset.i, g=ep.gaps[i]; ans[i]=b.dataset.o; draw();
+      if(b.dataset.o===g.ans) speak(`${g.pre} ${g.ans} ${g.post}`);
+      if(ans.every((a,j)=>a===ep.gaps[j].ans)) markDone('gaps');
+    });
+    el.querySelectorAll('[data-trg]').forEach(b=>b.onclick=()=>{const i=+b.dataset.trg; showTr.has(i)?showTr.delete(i):showTr.add(i); draw();});
+  };
+  draw();
+};
+
+VIEWS.order = (el, ep) => {
+  let pool = shuffle(ep.order.map((o,i)=>i)); while(pool.every((v,i)=>v===i)) pool=shuffle(pool);
+  let picked = [], checked=false, tries=0;
+  const GRIP = '<svg class="icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>';
+  const move = (from, to) => { if(to<0||to>=picked.length||from===to) return; const [x]=picked.splice(from,1); picked.splice(to,0,x); checked=false; draw(); };
+  const draw = () => {
+    const full = !pool.length, allRight = checked && picked.every((v,k)=>v===k);
+    el.innerHTML = `
+      <div class="eyebrow">Senin sıran</div>
+      ${full&&!allRight?`<div class="note">${checked?'Kırmızı kartları tutamaçtan (⋮⋮) sürükleyerek doğru yere taşı, sonra yeniden kontrol et.':'Sıralamayı değiştirmek için kartı tutamaçtan (⋮⋮) sürükle ya da ok düğmelerini kullan.'}</div>`:''}
+      <div class="olist" id="olist">${picked.length?picked.map((i,k)=>`<div class="oitem${checked?(i===k?' right':' wrong'):''}${full&&!allRight?' dragok':''}" data-k="${k}">
+          ${full&&!allRight?`<span class="grip" data-grip="${k}" aria-hidden="true">${GRIP}</span>`:''}
+          <span class="k">${k+1}</span><span class="otext"><span class="ar">${esc(ep.order[i].ar)}</span>${checked?`<span class="muted otr">${esc(ep.order[i].tr)}</span>`:''}</span>
+          ${full&&!allRight?`<span class="arrows"><button class="btn sm ghost" data-up="${k}" aria-label="Yukarı taşı" ${k===0?'disabled':''}>↑</button><button class="btn sm ghost" data-dn="${k}" aria-label="Aşağı taşı" ${k===picked.length-1?'disabled':''}>↓</button></span>`:''}
+        </div>`).join(''):'<div class="muted">Aşağıdaki kartlardan ilk adımı seç.</div>'}</div>
+      ${pool.length?`<div class="eyebrow">Kartlar</div><div class="pool">${pool.map(i=>`<button class="tile" data-i="${i}">${esc(ep.order[i].ar)}</button>`).join('')}</div>`:''}
+      <div class="toolbar">
+        ${full&&!allRight?`<button class="btn primary" id="chk">${tries?'Yeniden kontrol et':'Kontrol et'}</button>`:''}
+        <button class="btn" id="rst">Baştan başla</button>
+      </div>
+      ${checked?`<div class="score"><b>${picked.filter((v,k)=>v===k).length}/${picked.length}</b><div style="font-weight:600">${allRight?((ep.ui&&ep.ui.order&&ep.ui.order.done)||'Tam isabet! Yusuf\'un sabahını doğru sıraladın.'):'Yeşil olanlar doğru yerde. Kırmızıları sürükleyip yeniden dene.'}</div></div>`:''}`;
+    el.querySelectorAll('.pool .tile').forEach(b=>b.onclick=()=>{ const i=+b.dataset.i; picked.push(i); pool=pool.filter(x=>x!==i); speak(ep.order[i].ar); draw(); });
+    el.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>move(+b.dataset.up, +b.dataset.up-1));
+    el.querySelectorAll('[data-dn]').forEach(b=>b.onclick=()=>move(+b.dataset.dn, +b.dataset.dn+1));
+    const c=$('#chk',el); if(c) c.onclick=()=>{ checked=true; tries++; draw(); if(picked.every((v,k)=>v===k)) markDone('order'); };
+    $('#rst',el).onclick=()=>VIEWS.order(el,ep);
+    // pointer drag (mouse + touch)
+    el.querySelectorAll('[data-grip]').forEach(g=>g.addEventListener('pointerdown', ev=>{
+      ev.preventDefault();
+      const list=$('#olist',el), items=[...list.querySelectorAll('.oitem')], from=+g.dataset.grip, item=items[from];
+      const rects=items.map(x=>x.getBoundingClientRect()), step=rects.length>1? rects[1].top-rects[0].top : rects[0].height+8;
+      const y0=ev.clientY; let to=from;
+      item.classList.add('dragging'); g.setPointerCapture(ev.pointerId);
+      const onMove = m => {
+        const dy=m.clientY-y0; item.style.transform=`translateY(${dy}px)`;
+        to=Math.max(0,Math.min(items.length-1, from+Math.round(dy/step)));
+        items.forEach((x,j)=>{ if(j===from) return; let s=0; if(from<to && j>from && j<=to) s=-step; if(from>to && j<from && j>=to) s=step; x.style.transform=s?`translateY(${s}px)`:''; });
+      };
+      const onUp = () => { g.removeEventListener('pointermove',onMove); g.removeEventListener('pointerup',onUp); g.removeEventListener('pointercancel',onUp);
+        items.forEach(x=>x.style.transform=''); item.classList.remove('dragging'); if(to!==from) move(from,to); };
+      g.addEventListener('pointermove',onMove); g.addEventListener('pointerup',onUp); g.addEventListener('pointercancel',onUp);
+    }));
+  };
+  draw();
+};
+
+VIEWS.read = (el, ep) => {
+  const R = ep.reading, P = prefs(); const open = new Set();
+  const draw = () => {
+    el.innerHTML = `
+      <div class="toolbar"><button class="toggle" id="tH" aria-pressed="${P.harakat}">Harekeler</button>${spkBtn(R.paras.map(p=>p.ar).join(' '),'Metnin tamamını dinle')}<span class="muted" style="font-size:.88rem">Metnin tamamını dinle</span></div>
+      <article class="reader">
+        <h3>${esc(R.titleAr)}</h3>
+        ${R.paras.map((p,i)=>`<div class="para">
+          <div class="ar">${esc(P.harakat?p.ar:strip(p.ar))}</div>
+          <div class="row">${spkBtn(p.ar,'Paragrafı dinle')}<button class="btn sm ghost" data-p="${i}">${open.has(i)?'Çeviriyi gizle':'Türkçesini göster'}</button></div>
+          ${open.has(i)?`<div class="tr">${esc(p.tr)}</div>`:''}
+        </div>`).join('')}
+      </article>
+      <h3 style="font-size:1.15rem">Okuduğunu anladın mı? <span class="ar" style="font-size:1.1rem;font-weight:600">· هَلْ فَهِمْتَ النَّصَّ؟</span></h3>
+      <div id="rq" style="display:grid;gap:12px"></div>`;
+    $('#tH',el).onclick=()=>{P.harakat=!P.harakat;save();draw();};
+    el.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{const i=+b.dataset.p; open.has(i)?open.delete(i):open.add(i); draw();});
+    quiz($('#rq',el), ep, R.questions, 'read', false);
+  };
+  draw();
+};
+
+VIEWS.shadow = (el, ep) => {
+  const items = ep.shadowItems || ep.segments.filter(s=>s.sum); const st=epState(ep.id); st.reps = st.reps || {};
+  const rk = s => 't'+s.t;
+  const draw = () => {
+    const doneN = items.filter(s=>(st.reps[rk(s)]||0)>=3).length;
+    el.innerHTML = `<div class="note">Önce cümleyi dinle, sonra kendi sesinle tekrar et. Yavaş hızla başla, sonra normal hıza geç. Her tekrardan sonra "Söyledim" düğmesine bas.</div>
+      <div class="muted" style="font-size:.9rem">${doneN} / ${items.length} cümle tamamlandı</div>` +
+      items.map((s,i)=>{const n=st.reps[rk(s)]||0; return `<div class="shadow">
+        <div class="ar">${esc(s.ar)}</div><div class="muted" style="font-size:.92rem">${esc(s.tr)}</div>
+        <div class="row">
+          <button class="btn sm" data-say="${esc(s.ar)}" data-rate="0.6">${ICON_SPK} Yavaş</button>
+          <button class="btn sm" data-say="${esc(s.ar)}" data-rate="0.9">${ICON_SPK} Normal</button>
+          <a class="btn sm ghost" href="${yt(ep,s.t)}" target="_blank" rel="noopener">${ICON_PLAY} Podcastte ${mmss(s.t)}</a>
+          <button class="btn sm primary" data-r="${i}" ${n>=3?'disabled':''}>${n>=3?'Tamam ✓':'Söyledim'}</button>
+          <span class="dots" aria-label="${n} / 3 tekrar">${[0,1,2].map(k=>`<i class="${k<n?'on':''}"></i>`).join('')}</span>
+        </div></div>`;}).join('');
+    el.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{ const k=rk(items[+b.dataset.r]); st.reps[k]=Math.min(3,(st.reps[k]||0)+1); save(); draw(); if(items.every(s=>(st.reps[rk(s)]||0)>=3)) markDone('shadow'); });
+  };
+  draw();
+};
+
+/* Esnek dikte değerlendirmesi: hareke isteğe bağlı; yazılan harekeler doğruysa övülür, yanlışsa uyarılır. */
+const HAR_RE = /[ً-ْٰ]/;
+const loose = s => strip(s).replace(/[أإآٱ]/g,'ا').replace(/[ؤئ]/g,'ء').replace(/ة/g,'ه').replace(/ى/g,'ي').replace(/ـ/g,'').replace(/\s+/g,'');
+function letters(s){ const out=[]; for(const ch of s.replace(/\s+/g,'')){ if(HAR_RE.test(ch)){ if(out.length) out[out.length-1].m.add(ch); } else out.push({c:ch,m:new Set()}); } return out; }
+function gradeDict(typed, target){
+  const t = typed.trim(); if(!t) return {k:'empty'};
+  const T = strip(t).replace(/\s+/g,''), G = strip(target).replace(/\s+/g,'');
+  const hasMarks = HAR_RE.test(t);
+  if(T===G){
+    if(!hasMarks) return {k:'ok', msg:'Doğru! Harekesiz yazdın, bu da kabul.'};
+    const A=letters(t), B=letters(target); let bad=0, full=true;
+    A.forEach((x,j)=>{ const y=B[j]; if(!y) return; if(x.m.size===0){ if(y.m.size) full=false; return; } x.m.forEach(m=>{ if(!y.m.has(m)) bad++; }); if(x.m.size<y.m.size) full=false; });
+    if(bad) return {k:'mark', msg:'Harfler doğru! Bazı harekeler farklı; doğru yazılışa bak.'};
+    return {k:'ok', msg: full ? 'Mükemmel! Harekeleriyle birlikte tam doğru.' : 'Doğru! Yazdığın harekeler de doğru.'};
+  }
+  const lt=loose(t), lg=loose(target);
+  if(lt===lg){
+    let note='Neredeyse! Küçük bir yazım farkı var';
+    if(/ه$/.test(T) && /ة$/.test(G)) note='Neredeyse! Kelime sonunda ه değil ة (tā marbūṭa) olmalı';
+    else if(/ي$/.test(T) && /ى$/.test(G)) note='Neredeyse! Kelime sonunda ي değil ى olmalı';
+    else if(/[اأإآ]/.test(T+G)) note='Neredeyse! Hemzeli elif (أ / إ / آ) farkı var';
+    return {k:'near', msg: note+'.'};
+  }
+  if(lt.replace(/^ال/,'')===lg.replace(/^ال/,'')) return {k:'near', msg:'Doğru kelime! Sadece başındaki ال (harf-i tarif) fazla ya da eksik.'};
+  return {k:'no', msg:'Doğrusu:'};
+}
+
+VIEWS.dict = (el, ep) => {
+  const words = ep.dictation; let i=0, typed='', res=null, score=0, hintOn=false, showMarks=false;
+  const hint = w => (ep.vocab.find(v=>norm(v.ar).replace(/^ال/,'')===norm(w))||{}).tr || '';
+  const KEYS = 'ا ب ت ث ج ح خ د ذ ر ز س ش ص ض ط ظ ع غ ف ق ك ل م ن ه و ي ة ى أ إ ء ؤ ئ'.split(' ');
+  const MARKS = [['َ','üstün'],['ِ','esre'],['ُ','ötre'],['ْ','cezm'],['ّ','şedde'],['ً','iki üstün']];
+  const draw = () => {
+    if(i>=words.length){ el.innerHTML=`<div class="score"><b>${score}/${words.length}</b><div><div style="font-weight:600">Dikte bitti.</div><button class="btn sm" id="again" style="margin-top:6px">Yeniden başla</button></div></div>`; $('#again',el).onclick=()=>VIEWS.dict(el,ep); markDone('dict'); return; }
+    const w = words[i]; const ok = res && res.k!=='no';
+    el.innerHTML = `<div class="dict">
+      <div class="toolbar" style="justify-content:center"><span class="pill">Kelime ${i+1} / ${words.length}</span>${hintOn||res?`<span class="pill plain">İpucu: ${esc(hint(w))}</span>`:'<button class="btn sm ghost" id="hint">İpucu göster</button>'}</div>
+      <div class="toolbar" style="justify-content:center">
+        <button class="btn primary" data-say="${esc(w)}" data-rate="0.7">${ICON_SPK} Dinle</button>
+        <button class="btn" data-say="${esc(w)}" data-rate="0.45">Çok yavaş</button>
+      </div>
+      <input class="out" id="dIn" dir="rtl" lang="ar" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Duyduğunu yaz" value="${esc(typed)}" ${res?'readonly':''} aria-label="Cevabın (Arapça)">
+      <p class="muted" style="margin:0;font-size:.85rem">Hareke yazmak zorunlu değil. İstersen ekleyebilirsin; doğruysa bonus geri bildirim alırsın.</p>
+      ${res?`<div class="fb ${ok?'ok':'no'}" style="justify-content:center;font-size:1rem;flex-direction:column;gap:2px"><span>${esc(res.msg)}</span><span class="ar" style="font-size:1.7rem">${esc(w)}</span></div>`:''}
+      <div class="kb">${KEYS.map(k=>`<button data-k="${k}" ${res?'disabled':''}>${k}</button>`).join('')}
+        <button class="wide" data-k=" " ${res?'disabled':''}>Boşluk</button><button class="wide" data-k="⌫" ${res?'disabled':''}>Sil ⌫</button></div>
+      <button class="btn sm ghost" id="mk" aria-expanded="${showMarks}">${showMarks?'Harekeleri gizle':'Hareke ekle (isteğe bağlı)'}</button>
+      ${showMarks?`<div class="kb marks">${MARKS.map(([m,l])=>`<button data-k="${m}" title="${l}" aria-label="${l}" ${res?'disabled':''}><span class="mk">ـ${m}</span><small>${l}</small></button>`).join('')}</div>`:''}
+      <div class="toolbar" style="justify-content:center">${res?'<button class="btn primary" id="nx">Sonraki kelime →</button>':'<button class="btn primary" id="ck">Kontrol et</button>'}</div>
+    </div>`;
+    const inp=$('#dIn',el);
+    inp.oninput=()=>{ typed=inp.value; };
+    inp.onkeydown=ev=>{ if(ev.key==='Enter'){ ev.preventDefault(); (res?$('#nx',el):$('#ck',el))?.click(); } };
+    el.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{ const k=b.dataset.k; typed = k==='⌫'? [...typed].slice(0,-1).join('') : typed+k; draw(); });
+    const ck=$('#ck',el); if(ck) ck.onclick=()=>{ typed=inp.value; const g=gradeDict(typed,w); if(g.k==='empty'){ toast('Önce bir şey yaz.'); return; } res=g; if(g.k!=='no') score++; draw(); };
+    const nx=$('#nx',el); if(nx) nx.onclick=()=>{ i++; typed=''; res=null; hintOn=false; draw(); };
+    const hb=$('#hint',el); if(hb) hb.onclick=()=>{ hintOn=true; draw(); };
+    $('#mk',el).onclick=()=>{ showMarks=!showMarks; draw(); };
+  };
+  draw();
+};
+
+VIEWS.mine = (el, ep) => {
+  const st=epState(ep.id); st.mine = st.mine || {}; st.said = st.said||0; const showTr=new Set(); let patOpen=false;
+  const draw = () => {
+    const sentences = ep.frames.map(f=>{ const v=st.mine[f.key]; return v!=null ? f.tpl.replace('{x}', f.opts[v][0]) : null; }).filter(Boolean);
+    const PT = ep.pattern;
+    const patHTML = PT ? `<div class="pattern${patOpen?' open':''}">
+        <button class="pat-h" id="patT" aria-expanded="${patOpen}"><span class="pill gold">Kalıp</span><span class="ar pat-ar">${esc(PT.ar)}</span><span class="pat-tr">${esc(PT.tr)}</span><span class="chev" aria-hidden="true">${patOpen?'−':'+'}</span></button>
+        ${patOpen?`<div class="pat-b"><ul>${PT.notes.map(n=>`<li>${esc(n).replace(/([\u0621-\u064A][\u0621-\u0652\s]*[\u0621-\u0652])/g,'<bdi class="ari">$1</bdi>')}</li>`).join('')}</ul>
+          <div class="pat-ex">${PT.examples.map(e=>`<div class="pat-i"><span class="ar">${esc(e.ar)}</span><span class="muted">${esc(e.tr)}</span>${spkBtn(e.ar,'Dinle')}</div>`).join('')}</div></div>`:''}
+      </div>` : '';
+    el.innerHTML = patHTML + `<div class="frames">${ep.frames.map(f=>{const T=showTr.has(f.key); return `<div class="q frame">
+        <div class="qrow"><div class="qt ar">${esc(f.labelAr)}</div>${spkBtn(f.labelAr,'Soruyu dinle')}</div>
+        <div><button class="btn sm ghost" data-trf="${f.key}">${T?'Türkçesini gizle':'Türkçesini göster'}</button>${T?` <span class="muted" style="font-size:.9rem">${esc(f.label)}</span>`:''}</div>
+        <div class="opts" style="direction:rtl">${f.opts.map(([a,t],j)=>`<button class="opt ar-opt${st.mine[f.key]===j?' right':''}" data-f="${f.key}" data-j="${j}">${esc(f.tpl.replace('{x}',a))}${T?`<span style="display:block;direction:ltr;font-family:var(--f-body);font-size:.8rem;color:var(--muted);line-height:1.4">${esc(t)}</span>`:''}</button>`).join('')}</div></div>`;}).join('')}</div>
+      <div class="mine">
+        <div class="eyebrow">${esc((ep.ui&&ep.ui.mine&&ep.ui.mine.label)||'Benim sabahım · صَبَاحِي')}</div>
+        ${sentences.length?`<div class="ar">${sentences.map(esc).join(' ')}</div>
+          <div class="toolbar">${spkBtn(sentences.join(' '),'Paragrafımı dinle')}<span style="font-size:.9rem">Dinle, sonra yüksek sesle oku.</span>
+          <button class="btn sm primary" id="said" ${st.said>=3?'disabled':''}>${st.said>=3?'Üç kez okudun ✓':'Sesli okudum ('+st.said+'/3)'}</button></div>`
+          :'<div class="muted">Yukarıdan seçim yaptıkça paragrafın burada oluşacak.</div>'}
+      </div>
+      ${(()=>{const T=(ep.ui&&ep.ui.mine&&ep.ui.mine.task)||{ar:'اِقْرَأْ فِقْرَتَكَ لِزَمِيلِكَ، وَاسْأَلْهُ: مَتَى تَسْتَيْقِظُ؟',tr:'Paragrafını bir arkadaşına oku, sonra ona sor: "Ne zaman uyanıyorsun?"'};return `<div class="note"><div class="ar" style="font-size:1.15rem">${esc(T.ar)}</div>Sınıf görevi: ${esc(T.tr)}</div>`;})()}`;
+    el.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{ st.mine[b.dataset.f]=+b.dataset.j; save(); draw(); });
+    const pt=$('#patT',el); if(pt) pt.onclick=()=>{ patOpen=!patOpen; draw(); };
+    el.querySelectorAll('[data-trf]').forEach(b=>b.onclick=()=>{ const k=b.dataset.trf; showTr.has(k)?showTr.delete(k):showTr.add(k); draw(); });
+    const s=$('#said',el); if(s) s.onclick=()=>{ st.said++; save(); draw(); if(st.said>=3 && Object.keys(st.mine).length===ep.frames.length) markDone('mine'); };
+  };
+  draw();
+};
+
+document.documentElement.lang='tr';
+$('#homeBtn').onclick=renderHome;
+const SCALES=[0.85,1,1.15,1.3,1.5];
+function applyScale(){ const P=prefs(); let i=SCALES.indexOf(P.ars); if(i<0){i=1;P.ars=1;}
+  document.documentElement.style.setProperty('--ars', P.ars);
+  $('#fsDown').disabled = i===0; $('#fsUp').disabled = i===SCALES.length-1; }
+function stepScale(d){ const P=prefs(); let i=SCALES.indexOf(P.ars); if(i<0) i=1; i=Math.max(0,Math.min(SCALES.length-1,i+d)); P.ars=SCALES[i]; save(); applyScale(); toast('Arapça yazı boyutu: %'+Math.round(P.ars*100)); }
+$('#fsDown').onclick=()=>stepScale(-1); $('#fsUp').onclick=()=>stepScale(1); applyScale();
+const setTop=()=>document.documentElement.style.setProperty('--toph', $('.top').offsetHeight+'px');
+setTop(); addEventListener('resize', setTop); if(document.fonts) document.fonts.ready.then(setTop);
+const h=(location.hash||'').slice(1);
+if(h && EPS.some(e=>e.id===h)) openEp(h); else renderHome();
+})();
+</script>
+
+</body>
+</html>
